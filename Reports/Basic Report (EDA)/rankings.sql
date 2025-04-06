@@ -99,6 +99,8 @@ FROM
 	gold.dim_clients c
 LEFT JOIN gold.fact_transactions t
 ON c.client_key=t.client_key
+WHERE
+	c.client_full_name !='n/a'
 GROUP BY
 	c.client_full_name) r
 WHERE
