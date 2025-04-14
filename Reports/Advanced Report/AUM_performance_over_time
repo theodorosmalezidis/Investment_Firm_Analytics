@@ -41,8 +41,7 @@ FROM
 	PrevCulumativeAUM
 ORDER BY
 		fiscal_year,
-		fiscal_quarter
-
+		fiscal_quarter;
 
 
 
