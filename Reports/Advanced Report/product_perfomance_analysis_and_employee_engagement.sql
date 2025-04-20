@@ -1,8 +1,13 @@
+
+
+
+
 WITH ProductsStats AS(
 	SELECT
 		p.product_name,
 		COUNT(DISTINCT employee_key) AS analyze_count,
-		SUM(invested_amount)-SUM(withdrawal_amount) AS product_AUM
+		SUM(invested_amount)-SUM(withdrawal_amount) AS product_AUM,
+		COUNT(DISTINCT client_key) AS invested_clients
 	FROM
 		gold.fact_employee_product e
 	LEFT JOIN gold.dim_products p 
@@ -24,6 +29,7 @@ SELECT
 	pa.avg_analyze_count,
 	ps.product_AUM,
 	pa.avg_product_AUM,
+	invested_clients,
 	CASE
 		WHEN ps.analyze_count>=10 THEN 'Overanalyzed'
 		WHEN ps.analyze_count>=5 THEN 'Sufficient_Analyzed'
@@ -41,4 +47,3 @@ WHERE
 	PS.product_name IS NOT NULL
 ORDER BY
 	ps.analyze_count DESC
-
