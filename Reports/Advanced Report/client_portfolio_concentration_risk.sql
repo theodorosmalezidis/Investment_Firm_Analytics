@@ -1,4 +1,4 @@
-
+/*a.Client Portfolio Diversification & Risk Classification*/
 
 
 
@@ -104,7 +104,7 @@ ORDER BY
 	branch;
 
 
-
+/*b. Summary of Client Risk Concentration by Branch*/
 
 
 WITH ClientPortfolio AS (
