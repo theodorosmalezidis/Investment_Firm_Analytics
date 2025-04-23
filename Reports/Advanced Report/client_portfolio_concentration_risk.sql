@@ -1,4 +1,4 @@
-/*a.Client Portfolio Diversification & Risk Classification*/
+/*a.Client Portfolio Diversification & Risk Assessment*/
 
 
 
