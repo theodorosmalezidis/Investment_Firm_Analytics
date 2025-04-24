@@ -35,68 +35,12 @@ I split my report into two parts, basic report (EDA) focused on providing a high
 
 *Image created with draw.io*
 
-There are three sections in basic report:
+You can see the report [here](https://github.com/theodorosmalezidis/Investment_Firm_Analytics/tree/main/Reports/Basic%20Report%20(EDA)).
 
-**1.Big Numbers:** Summarizes key metrics, providing a quick overview of business performance.
+## A) Basic Report (EDA)
 
-```sql
-SELECT metric_name, metric_value
-FROM (
-	SELECT 'Total AUM' AS metric_name, SUM(invested_amount) - SUM(withdrawal_amount) AS metric_value, 1 AS order_column
-    	FROM gold.fact_transactions --Assets Under Management in USD
-   	UNION ALL
-	SELECT 'Total Invested Amount' AS metric_name, SUM(invested_amount) AS metric_value, 2 AS order_column
-    	FROM gold.fact_transactions --in USD
-   	UNION ALL
-    	SELECT 'Total Withdrawn Amount' AS metric_name, SUM(withdrawal_amount) AS metric_value, 3 AS order_column
-   	FROM gold.fact_transactions --in USD
-    	UNION ALL
-    	SELECT 'Total Transactions Count' AS metric_name, COUNT(DISTINCT transaction_id) AS metric_value, 4 AS order_column
-    	FROM gold.fact_transactions
-    	UNION ALL
-	SELECT 'Total Investments Count' AS metric_name, COUNT(DISTINCT transaction_id) AS metric_value, 5 AS order_column
-    	FROM gold.fact_transactions WHERE invested_amount != 0 
-	UNION ALL
-	SELECT 'Total Withdrawals Count' AS metric_name, COUNT(DISTINCT transaction_id) AS metric_value, 6 AS order_column
-    	FROM gold.fact_transactions WHERE invested_amount = 0 
-	UNION ALL
-	SELECT 'Total Active Clients Count' AS metric_name, COUNT(client_key) AS metric_value, 10 AS order_column
-    	FROM gold.dim_clients WHERE closure_date IS NULL -- Clients with Active Portfolios
-	UNION ALL
-	SELECT 'Total Inactive Clients Count' AS metric_name, COUNT(client_key) AS metric_value, 11 AS order_column
-    	FROM gold.dim_clients WHERE  closure_date IS NOT NULL -- Clients with Inactive Portfolios
-	UNION ALL
-    	SELECT 'Total Hired Employees Count' AS metric_name, COUNT(employee_key) AS metric_value, 12 AS order_column
-    	FROM gold.dim_employees
-    	UNION ALL
-	SELECT 'Total Active Employees Count' AS metric_name, COUNT(employee_key) AS metric_value, 13 AS order_column
-    	FROM gold.dim_employees WHERE exit_date IS NULL -- Still Employed
-    	UNION ALL
-	SELECT 'Total Former Employees Count' AS metric_name, COUNT(employee_key) AS metric_value, 14 AS order_column
-    	FROM gold.dim_employees WHERE exit_date IS NOT NULL --No longer Employed
-   	UNION ALL
-   	SELECT 'Total Holdings Count' AS metric_name, COUNT(product_name) AS metric_value, 15 AS order_column
-    	FROM gold.dim_products --Holdings Under Management
-) AS report
-ORDER BY order_column
-```
+![visual](visual_documentation/png/advanced_report.png)
 
-Results
+*Image created with draw.io*
 
-### Key Metrics Summary
-
-| Metric Name                     | Metric Value     |
-|--------------------------------|------------------|
-| Total AUM                      | 971,799,739      |
-| Total Invested Amount          | 1,452,987,114    |
-| Total Withdrawn Amount         | 481,187,375      |
-| Total Transactions Count       | 299,042          |
-| Total Investments Count        | 223,207          |
-| Total Withdrawals Count        | 75,836           |
-| Total Active Clients Count     | 8,494            |
-| Total Inactive Clients Count   | 1,506            |
-| Total Hired Employees Count    | 300              |
-| Total Active Employees Count   | 282              |
-| Total Former Employees Count   | 18               |
-| Total Holdings Count           | 523              |
-
+You can see the report [here](https://github.com/theodorosmalezidis/Investment_Firm_Analytics/tree/main/Reports/Advanced%20Report).
