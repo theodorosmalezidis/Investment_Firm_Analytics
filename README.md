@@ -27,5 +27,5 @@ I split my report into two parts, basic report (EDA) focused on providing a high
 
 ## A) Basic Report (EDA)
 
-![visual](visual_documentation/png/basic report.png)
+![visual](visual_documentation/png/basic_report.png)
 
