@@ -26,11 +26,13 @@ I used the views created in the final layer (gold layer) in the DataWarehouse.
 I split my report into two parts, basic report (EDA) focused on providing a high-level overview through summary statistics, categorization, and rankings, and advanced report for deeper insights through performance metrics, trend analysis, and risk evaluation.
 
 ![visual](visual_documentation/png/report_structure.png)
+
 *Image created with draw.io*
 
 ## A) Basic Report (EDA)
 
 ![visual](visual_documentation/png/basic_report.png)
+
 *Image created with draw.io*
 
 There are three sections in basic report:
