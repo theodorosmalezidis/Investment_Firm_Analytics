@@ -37,7 +37,7 @@ I split my report into two parts, basic report (EDA) focused on providing a high
 
 There are three sections in basic report:
 
-- **1.Big Numbers:** Summarizes key metrics, providing a quick overview of business performance.
+**1.Big Numbers:** Summarizes key metrics, providing a quick overview of business performance.
 
 ```sql
 SELECT metric_name, metric_value
