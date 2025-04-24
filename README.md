@@ -37,7 +37,7 @@ I split my report into two parts, basic report (EDA) focused on providing a high
 
 You can see the report [here](https://github.com/theodorosmalezidis/Investment_Firm_Analytics/tree/main/Reports/Basic%20Report%20(EDA)).
 
-## A) Basic Report (EDA)
+## B) Advanced Report 
 
 ![visual](visual_documentation/png/advanced_report.png)
 
