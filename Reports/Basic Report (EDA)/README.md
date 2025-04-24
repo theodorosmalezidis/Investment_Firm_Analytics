@@ -1,9 +1,11 @@
 # Basic Report (EDA)
 
+![visual](/visual_documentation/png/basic_report.png)
 
 There are three sections in basic report:
 
-### **1. Big Numbers:** Summarizes key metrics, providing a quick overview of business performance.
+## **1. Big Numbers:** Summarizes key metrics, providing a quick overview of business performance.
+
 
 ```sql
 SELECT metric_name, metric_value
@@ -66,7 +68,7 @@ Results
 | Total Former Employees Count   | 18               |
 | Total Holdings Count           | 523              |
 
-### **2.Categorization:** Segments data by key dimensions to analyze contributions and distributions across the business.
+## **2.Categorization:** Segments data by key dimensions to analyze contributions and distributions across the business.
 
 **a) Client Analysis**
 
