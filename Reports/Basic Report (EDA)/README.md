@@ -193,3 +193,29 @@ By Gender: Gender-based segmentation of employees.
 By Marital Status: Demographic insight for HR and policy-making.
 
 💡 Supports workforce planning, HR diversity assessments, and departmental resource allocation.
+
+For example:
+ ```sql
+    SELECT
+	branch,
+	COUNT (employee_id) AS total_employees_count
+FROM
+	gold.dim_employees
+GROUP BY
+	branch
+ORDER BY
+	total_employees_count DESC;
+
+<---------------------------------------------------------------->
+
+SELECT
+	department,
+	COUNT (employee_key) AS total_employees
+FROM
+	gold.dim_employees
+GROUP BY
+	department
+ORDER BY
+	total_employees DESC;
+```
+
