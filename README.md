@@ -18,6 +18,7 @@ I used the views created in the final layer (gold layer) in the DataWarehouse.
 - **Git:**  My trusty version control tool that helped me keep track of changes. 
 - **GitHub:**  Where I shared my SQL scripts and kept everything organized, making it easier to track progress. 
 - **Draw.io:**  I used this tool to create clear visual documentation of how my data analysis reports are structured and organized.
+- **Python (via Anaconda):** I used Python with Anaconda to import SQL query results and produce visualizations, such as bar charts, for deeper analysis.
 
 # Overview
 
