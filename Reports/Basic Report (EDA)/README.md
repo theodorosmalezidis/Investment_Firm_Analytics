@@ -182,6 +182,7 @@ ORDER BY
 ```
 ![visual](/visual_documentation/charts/employee_positions.png)
 
+
 *Bar chart visualizing total clients per branch.This table visualization was created with Python after importing my SQL query results*
 
 
