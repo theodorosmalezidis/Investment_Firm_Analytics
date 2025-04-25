@@ -68,7 +68,7 @@ Results
 | Total Former Employees Count   | 18               |
 | Total Holdings Count           | 523              |
 
-## **2.Categorization:** Segments data by key dimensions to analyze contributions and distributions across the business.
+## **2. Categorization:** Segments data by key dimensions to analyze contributions and distributions across the business.
 
 **a) Client Analysis**
 
@@ -95,18 +95,9 @@ GROUP BY
     branch
 ORDER BY
     total_clients_count DESC;
-<---------------------------------------------------------------->
-
-SELECT
-    country,
-    COUNT (client_key) AS total_clients_count
-FROM
-    gold.dim_clients
-GROUP BY
-    country
-ORDER BY
-    total_clients_count DESC;
 ```
+![visual](/visual_documentation/charts/total_clients_per_branch.png)
+*Bar chart visualizing total clients per branch.This table visualization was created with Python after importing my SQL query results*
 
 **b) Product Analysis (Holdings)**
 
@@ -178,7 +169,7 @@ ORDER BY
     total_aum DESC;
 ```
 
-**d)Employee Analysis**
+**d) Employee Analysis**
 
 Provides a breakdown of employees across different organizational dimensions:
 
@@ -219,3 +210,6 @@ ORDER BY
 	total_employees DESC;
 ```
 
+## **3. Rankings:** Top and worst performers across key areas highlighting leaders and trends.
+
+**a) Holdings**
