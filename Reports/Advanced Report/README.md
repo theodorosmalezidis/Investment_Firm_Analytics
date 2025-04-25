@@ -8,11 +8,13 @@ This report is structured into five key sections , each of which I analyzed to p
 
 ## 1. Annual Client Retention Rate
 
-- **Purpose:** Measures the percentage of clients retained over time by comparing newly onboarded clients with those who remain active, grouped by year of acquisition.
+- **Purpose:** A high retention rate indicates low churn (few clients leaving), while a low retention rate indicates high churn (many clients leaving).
 
 - **Insight:** Identifies trends in client loyalty and retention effectiveness across different onboarding years, revealing patterns in long-term client engagement.
 
 - **Value:** Supports strategic planning by uncovering retention strengths or weaknesses, helping the firm improve client experience, reduce churn, and allocate resources toward higher-retention segments.
+
+First I find the count of total clients who joined each year in the JoinedClients CTE and then those who remained active in the RetainedClients CTE, using a LEFT JOIN to align the two CTE s by year and calculate the retention rate as the percentage of retained clients relative to total clients joined, with the results ordered chronologically by year.
 
 ```sql
 WITH JoinedClients AS (
@@ -50,6 +52,25 @@ ORDER BY
 	year_joined
 ```
 
-![visual](/visual_documentation/charts/client_retention_rate_by_year.png)
+![visual](/visual_documentation/charts/combined_retention_and_difference_chart.png)
 
 *Bar chart visualizing annual client retention rate.This visualization was created with Python after importing my SQL query results*
+
+For reference: 
+
+Excellent Retention (90%–100%)
+
+Good Retention (80%–89.99%)
+
+Moderate Retention (70%–79.99%)
+
+Fair Retention (60%–69.99%)
+
+Poor Retention (Below 60%)
+
+Key Findings : 
+
+- Retention rates have remained stable, averaging 85%.
+- The largest drop occurred between 2021 and 2022 (-1.11%).
+- All years fall into the "Good Retention" category.
+     
