@@ -177,7 +177,7 @@ GROUP BY
 ORDER BY
 	total_employees DESC;
 ```
-![visual](/visual_documentation\charts\employee_positions.png)
+![visual](/visual_documentation/charts\employee_positions.png)
 *Bar chart visualizing total clients per branch.This table visualization was created with Python after importing my SQL query results*
 
 
