@@ -97,6 +97,7 @@ ORDER BY
     total_clients_count DESC;
 ```
 ![visual](/visual_documentation/charts/total_clients_per_branch.png)
+
 *Bar chart visualizing total clients per branch.This table visualization was created with Python after importing my SQL query results*
 
 **b) Product Analysis (Holdings)**
@@ -119,6 +120,7 @@ ORDER BY
     total_products_count DESC;
 ```
 ![visual](/visual_documentation/charts/product_count_by_type.png)
+
 *Bar chart visualizing total clients per branch.This table visualization was created with Python after importing my SQL query results*
 
 **c) AUM (Assets Under Management) Analysis**
@@ -147,6 +149,7 @@ ORDER BY
     total_aum DESC;
 ```
 ![visual](/visual_documentation/charts/aum_by_product_type.png)
+
 *Bar chart visualizing total clients per branch.This table visualization was created with Python after importing my SQL query results*
 
 **d) Employee Analysis**
@@ -178,6 +181,7 @@ ORDER BY
 	total_employees DESC;
 ```
 ![visual](/visual_documentation/charts/employee_positions.png)
+
 *Bar chart visualizing total clients per branch.This table visualization was created with Python after importing my SQL query results*
 
 
