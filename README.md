@@ -4,7 +4,7 @@ This is a data analysis project that follows up on my data engineering work, whe
 
 # Goals
 
-The purpose of this phase is to extract meaningful insights from the structured data, focusing on business performance metrics across clients, employees, and investment products. Through a basic and an advanced analytical report, this phase demonstrates how the data warehouse enables informed decision-making.Feel free to check the scripts [here](https://github.com/theodorosmalezidis/Investment_Firm_Analytics/tree/main/Reports).
+The purpose of this phase is to extract meaningful insights from the structured data, focusing on business performance metrics across clients, employees, and investment products. Through a basic and an advanced analytical report, this phase demonstrates how the data warehouse enables informed decision-making.Feel free to check the report queries [here](https://github.com/theodorosmalezidis/Investment_Firm_Analytics/tree/main/Reports).
 
 # Dataset
 
