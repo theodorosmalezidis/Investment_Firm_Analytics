@@ -118,6 +118,9 @@ GROUP BY
 ORDER BY
     total_products_count DESC;
 ```
+![visual](/visual_documentation\charts\product_count_by_type.png)
+*Bar chart visualizing total clients per branch.This table visualization was created with Python after importing my SQL query results*
+
 **c) AUM (Assets Under Management) Analysis**
 
 This section calculates net AUM by subtracting total withdrawals from total investments, allowing you to understand how assets are distributed across various business dimensions:
@@ -128,6 +131,7 @@ By Branch: Highlights the total AUM managed by each branch, useful for understan
 
 By Country: Breaks down AUM by client country to see how asset holdings are spread geographically.
 
+For example:
 ```sql
 
 SELECT
@@ -141,33 +145,9 @@ GROUP BY
     product_type
 ORDER BY
     total_aum DESC;
-<---------------------------------------------------------------------->
-
-SELECT
-    branch,
-    SUM(invested_amount) - SUM(withdrawal_amount) AS total_aum
-FROM
-    gold.dim_clients c
-LEFT JOIN gold.fact_transactions t
-ON c.client_key=t.client_key
-GROUP BY
-    branch
-ORDER BY
-    total_aum DESC;
-<----------------------------------------------------------------------->
-
-SELECT
-    country,
-    SUM(invested_amount) - SUM(withdrawal_amount) AS total_aum
-FROM
-    gold.dim_clients c
-LEFT JOIN gold.fact_transactions t
-ON c.client_key=t.client_key
-GROUP BY
-    country
-ORDER BY
-    total_aum DESC;
 ```
+![visual](/visual_documentation\charts\aum_by_product_type.png)
+*Bar chart visualizing total clients per branch.This table visualization was created with Python after importing my SQL query results*
 
 **d) Employee Analysis**
 
@@ -187,28 +167,19 @@ By Marital Status: Demographic insight for HR and policy-making.
 
 For example:
  ```sql
-    SELECT
-	branch,
-	COUNT (employee_id) AS total_employees_count
-FROM
-	gold.dim_employees
-GROUP BY
-	branch
-ORDER BY
-	total_employees_count DESC;
-
-<---------------------------------------------------------------->
-
 SELECT
-	department,
+	position,
 	COUNT (employee_key) AS total_employees
 FROM
 	gold.dim_employees
 GROUP BY
-	department
+	position
 ORDER BY
 	total_employees DESC;
 ```
+![visual](/visual_documentation\charts\employee_positions.png)
+*Bar chart visualizing total clients per branch.This table visualization was created with Python after importing my SQL query results*
+
 
 ## **3. Rankings:** Top and worst performers across key areas highlighting leaders and trends.
 
