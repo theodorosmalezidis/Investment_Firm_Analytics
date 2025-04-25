@@ -70,10 +70,66 @@ Key Findings (keep in mind data is current up to March 2025):
 
 - Despite early growth (+18.22% in 2021), the overall trend indicates consistent annual declines from 2022 onward, signaling potential challenges in maintaining or growing assets.
      
+### (QoQ) % Change in Cumulative AUM
 
+```sql
+With QuarterlyAUM AS(
+	SELECT
+		YEAR(transaction_date) AS fiscal_year,
+		DATEPART(QUARTER, transaction_date) AS fiscal_quarter,
+		SUM(CAST(invested_amount AS DECIMAL (18, 2))) - SUM(CAST(withdrawal_amount AS DECIMAL (18, 2))) AS quarterly_aum
+	FROM
+		gold.fact_transactions
+	WHERE
+		transaction_date IS NOT NULL
+	GROUP BY
+		YEAR(transaction_date) ,
+		DATEPART(QUARTER, transaction_date)
+),
+CulumativeAUM AS(
+	SELECT
+		fiscal_year,
+		fiscal_quarter,
+		quarterly_aum,
+		SUM(quarterly_aum) OVER(ORDER BY fiscal_year,fiscal_quarter) AS culumative_aum
+	FROM
+		QuarterlyAUM
+),
+PrevCulumativeAUM AS(
+	SELECT *,
+		LAG(culumative_aum) OVER(ORDER BY fiscal_year,fiscal_quarter) AS prev_culumative_aum
+	FROM
+		CulumativeAUM
+)
+SELECT
+	fiscal_year,
+	fiscal_quarter,
+	quarterly_aum,
+	culumative_aum,
+	prev_culumative_aum,
+	CAST(ROUND(((culumative_aum/prev_culumative_aum)-1)*100, 2) AS DECIMAL (18,2)) AS qoq_perc
+FROM
+	PrevCulumativeAUM
+ORDER BY
+		fiscal_year,
+		fiscal_quarter;
+```
+![visual](/visual_documentation/charts/quarterly_aum_and_qoq_changes.png)
 
+*Bar chart visualizing QoQ Cumulative AUM change.This visualization was created with Python after importing my SQL query results*
 
+Key Findings:
 
+- Strong Initial Growth in 2020 : The first quarter of 2020 started with a relatively low AUM of $10.98M , but the cumulative AUM grew significantly by 492.75% QoQ  in Q2 2020, driven by a substantial quarterly AUM of $54.10M.
+
+- Consistent Quarterly Growth Until 2021 : From Q2 2020 to Q4 2021, the cumulative AUM showed consistent growth, albeit at a declining QoQ percentage rate (from 492.75%  in Q2 2020 to 16.64%  in Q4 2021).
+
+- Gradual Decline in Growth Rates : Starting from Q1 2022, the QoQ growth rates steadily decreased, ranging from 12.92%  in Q1 2022 to 3.31%  in Q1 2025, indicating slowing momentum in asset accumulation.
+
+- Partial-Year Data for 2025 : The Q1 2025 data reflects only the first quarter of the year and shows a QoQ growth rate of 3.31% , which is the lowest recorded growth rate in the dataset. However, this is not directly comparable to previous full quarters due to the partial-year nature of the data.
+
+- Peak Quarterly AUM : The highest quarterly AUM was recorded in Q2 2020  at $54.10M , contributing to the sharp initial growth.
+     
 ## 2. Annual Client Retention Rate
 
 - **Purpose:** The retention rate when is high indicates low churn (few clients leaving), while a low retention rate indicates high churn (many clients leaving).
