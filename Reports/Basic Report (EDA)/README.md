@@ -189,3 +189,109 @@ ORDER BY
 ## **3. Rankings:** Top and worst performers across key areas highlighting leaders and trends.
 
 **a) Holdings**
+
+Provides top and worst perfoming holdings across diferrent dimansions:
+
+By total Investment Value.
+
+By total AUM.
+
+💡 Shows high and low performing assets and areas needing improvement.
+
+For example:
+```sql
+SELECT *
+FROM(
+SELECT
+	ROW_NUMBER() OVER(ORDER BY SUM(invested_amount)-SUM(withdrawal_amount) DESC) AS holdings_ranking,
+	p.product_name,
+	p.product_type,
+	SUM(invested_amount)-SUM(withdrawal_amount) AS total_AUM
+FROM
+	gold.dim_products p
+LEFT JOIN gold.fact_transactions f
+ON p.product_key=f.product_key
+GROUP BY
+	p.product_name,
+	p.product_type) r
+WHERE
+	holdings_ranking <= 10
+ORDER BY
+	holdings_ranking;
+```
+
+![visual](/visual_documentation/charts/top_10_holdings_by_AUM.png)
+
+
+*Bar chart visualizing top 10 holdings by total AUM.This table visualization was created with Python after importing my SQL query results*
+
+**b) Clients**
+
+Provides top and worst perfoming clients across diferrent dimansions:
+
+By total AUM.
+
+By total Investments Placed.
+
+For example:
+```sql
+SELECT *
+FROM(
+SELECT
+	ROW_NUMBER() OVER(ORDER BY Count(invested_amount) DESC) AS clients_ranking,
+	c.client_full_name,
+	COUNT(invested_amount) AS investments_count
+FROM
+	gold.dim_clients c
+LEFT JOIN gold.fact_transactions t
+ON c.client_key=t.client_key
+GROUP BY
+	c.client_full_name) r
+WHERE
+	clients_ranking <= 10
+ORDER BY
+	clients_ranking;
+```
+
+![visual](/visual_documentation/charts/top_10_clients_by_investment_count.png)
+
+
+*Bar chart visualizing top 10 clients by total No. of investment orders.This table visualization was created with Python after importing my SQL query results*
+
+**b) Employees**
+
+Provides top and worst perfoming employees across diferrent dimansions:
+
+By total Portfolio managed.
+
+By total Holdings analyzed.
+
+For example:
+```sql
+SELECT *
+FROM(
+SELECT
+	ROW_NUMBER() OVER(ORDER BY COUNT (c.client_key) DESC) AS employees_ranking,
+	e.employee_full_name,
+	COUNT (c.client_key) AS active_portfolios
+FROM
+	gold.dim_employees e
+LEFT JOIN gold.fact_employee_client f
+ON e.employee_key=f.employee_key
+LEFT JOIN gold.dim_clients c
+ON f.client_key=c.client_key
+WHERE
+	c.create_date IS NOT NULL
+GROUP BY
+	e.employee_full_name) r
+WHERE
+	employees_ranking <= 10
+ORDER BY
+	employees_ranking;
+```
+
+![visual](/visual_documentation/charts/top_10_employees_by_active_portfolios.png)
+
+
+*Bar chart visualizing top 10 employees by total No. of Portfolio managed.This table visualization was created with Python after importing my SQL query results*
+
