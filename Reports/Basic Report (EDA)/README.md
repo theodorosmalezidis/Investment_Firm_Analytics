@@ -297,5 +297,5 @@ ORDER BY
 ![visual](/visual_documentation/charts/top_10_employees_by_active_portfolios.png)
 
 
-*Bar chart visualizing top 10 employees by total No. of Portfolio managed.This table visualization was created with Python after importing my SQL query results*
+*Bar chart visualizing top 10 employees by total No. of Portfolios managed. This table visualization was created with Python after importing my SQL query results.*
 
