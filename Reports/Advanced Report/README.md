@@ -8,11 +8,11 @@ This report is structured into five key sections , each of which I analyzed to p
 
 ## 1. Annual Client Retention Rate
 
-- **Purpose:** A high retention rate indicates low churn (few clients leaving), while a low retention rate indicates high churn (many clients leaving).
+- **Purpose:** The retention rate when is high indicates low churn (few clients leaving), while a low retention rate indicates high churn (many clients leaving).
 
 - **Insight:** Identifies trends in client loyalty and retention effectiveness across different onboarding years, revealing patterns in long-term client engagement.
 
-- **Value:** Supports strategic planning by uncovering retention strengths or weaknesses, helping the firm improve client experience, reduce churn, and allocate resources toward higher-retention segments.
+- **Value:** Supports strategic planning by uncovering retention strengths or weaknesses, helping the firm improve client experience and improving customer loyalty.
 
 First I find the count of total clients who joined each year in the JoinedClients CTE and then those who remained active in the RetainedClients CTE, using a LEFT JOIN to align the two CTE s by year and calculate the retention rate as the percentage of retained clients relative to total clients joined, with the results ordered chronologically by year.
 
