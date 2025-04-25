@@ -233,6 +233,8 @@ By total AUM.
 
 By total Investments Placed.
 
+💡 Shows high and low performing clients to enhance client relationship management.
+
 For example:
 ```sql
 SELECT *
@@ -258,13 +260,15 @@ ORDER BY
 
 *Bar chart visualizing top 10 clients by total No. of investment orders.This table visualization was created with Python after importing my SQL query results*
 
-**b) Employees**
+**c) Employees**
 
 Provides top and worst perfoming employees across diferrent dimansions:
 
 By total Portfolio managed.
 
 By total Holdings analyzed.
+
+💡 Shows high and low performing employees to support performance evaluations.
 
 For example:
 ```sql
