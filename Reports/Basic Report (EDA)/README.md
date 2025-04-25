@@ -98,7 +98,7 @@ ORDER BY
 ```
 ![visual](/visual_documentation/charts/total_clients_per_branch.png)
 
-*Bar chart visualizing total clients per branch.This table visualization was created with Python after importing my SQL query results*
+*Bar chart visualizing total clients per branch.This chart was created with Python after importing my SQL query results*
 
 **b) Product Analysis (Holdings)**
 
@@ -121,7 +121,7 @@ ORDER BY
 ```
 ![visual](/visual_documentation/charts/product_count_by_type.png)
 
-*Bar chart visualizing total products by type.This table visualization was created with Python after importing my SQL query results*
+*Bar chart visualizing total products by type.This chart was created with Python after importing my SQL query results*
 
 **c) AUM (Assets Under Management) Analysis**
 
@@ -150,7 +150,7 @@ ORDER BY
 ```
 ![visual](/visual_documentation/charts/aum_by_product_type.png)
 
-*Bar chart visualizing total AUM by product type.This table visualization was created with Python after importing my SQL query results*
+*Bar chart visualizing total AUM by product type.This chart was created with Python after importing my SQL query results*
 
 **d) Employee Analysis**
 
@@ -183,7 +183,7 @@ ORDER BY
 ![visual](/visual_documentation/charts/employee_positions.png)
 
 
-*Bar chart visualizing total employees per position.This table visualization was created with Python after importing my SQL query results*
+*Bar chart visualizing total employees per position.This chart was created with Python after importing my SQL query results*
 
 
 ## **3. Rankings:** Top and worst performers across key areas highlighting leaders and trends.
@@ -223,7 +223,7 @@ ORDER BY
 ![visual](/visual_documentation/charts/top_10_holdings_by_AUM.png)
 
 
-*Bar chart visualizing top 10 holdings by total AUM.This table visualization was created with Python after importing my SQL query results*
+*Bar chart visualizing top 10 holdings by total AUM.This chart was created with Python after importing my SQL query results*
 
 **b) Clients**
 
@@ -258,7 +258,7 @@ ORDER BY
 ![visual](/visual_documentation/charts/top_10_clients_by_investment_count.png)
 
 
-*Bar chart visualizing top 10 clients by total No. of investment orders.This table visualization was created with Python after importing my SQL query results*
+*Bar chart visualizing top 10 clients by total No. of investment orders.This chart was created with Python after importing my SQL query results*
 
 **c) Employees**
 
@@ -297,5 +297,5 @@ ORDER BY
 ![visual](/visual_documentation/charts/top_10_employees_by_active_portfolios.png)
 
 
-*Bar chart visualizing top 10 employees by total No. of Portfolios managed. This table visualization was created with Python after importing my SQL query results.*
+*Bar chart visualizing top 10 employees by total No. of Portfolios managed. This chart was created with Python after importing my SQL query results.*
 
