@@ -383,7 +383,7 @@ SELECT
     client_full_name,
     branch,
     country,
-    distinct_product_types,
+    distinct_product_types,  
     distinct_product_names,
     ROUND(total_client_portfolio, 2) AS total_portfolio_value,
     CAST(ROUND(top_product_concentration_percent, 2) as decimal (18, 2)) AS top_product_concentration_percent,
@@ -424,3 +424,8 @@ Resullts:
 | Stockholm   | 32                     | 22                | 236                   | 33               | 381                   |
 | Tokyo       | 37                     | 22                | 226                   | 24               | 359                   |
 | Washington  | 47                     | 24                | 248                   | 26               | 374                   |
+
+
+![visual](/visual_documentation/charts/client_risk_distribution_with_numbers.png)
+
+*Bar chart visualizing annual client retention rate.This visualization was created with Python after importing my SQL query results*
