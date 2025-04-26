@@ -198,3 +198,229 @@ Key Findings :
 - The largest drop occurred between 2021 and 2022 (-1.11%).
 - All years fall into the "Good Retention" category.
      
+## 5. Client Portfolio Diversification & Risk Assessment
+
+This query was designed as a Client Portfolio Diversification & Risk Assessment Tool.
+
+- **Purpose:** This tool evaluates client portfolio diversification and risk concentration by analyzing product variety, portfolio value distribution, and risk exposure. It helps identify high-risk portfolios and areas for improvement in diversification strategies.
+- **Insight:** It reveals how concentrated clients' portfolios are in specific products, highlighting potential risks. This enables targeted adjustments to improve portfolio diversification and reduce exposure.
+- **Value:** Supports effective risk management by providing insights into portfolio concentration, helping optimize client portfolios and ensuring long-term stability.
+
+### Query Overview: 
+
+- ClientPortfolio CTE: I calculate each active client's net investment (invested minus withdrawn) grouped by product and client.
+
+- TotalPortfolio CTE: I compute each client's total portfolio value by summing their net investments.
+
+- DiversificationMetrics CTE: I measure the number of distinct product types and names, identify the top product's concentration as a percentage of the total portfolio, and classify the client into a risk category based on their diversification and concentration level.
+
+- Final SELECT: I present each client's key diversification metrics, total portfolio value, top product concentration %, and assigned risk category, sorted by concentration and portfolio size.
+
+```sql
+WITH ClientPortfolio AS (
+    SELECT 
+        c.client_key,
+        c.client_full_name,
+        c.branch,
+        c.country,
+        p.product_type,
+        p.product_name,
+        SUM(t.invested_amount) - SUM(t.withdrawal_amount) AS net_portfolio_value
+    FROM gold.fact_transactions t
+    JOIN gold.dim_products p ON t.product_key = p.product_key
+    JOIN gold.dim_clients c ON t.client_key = c.client_key
+    WHERE t.transaction_date IS NOT NULL
+        AND (t.invested_amount > 0 OR t.withdrawal_amount > 0)
+        AND c.closure_date IS NULL -- Focus on active clients
+    GROUP BY 
+        c.client_key,
+        c.client_full_name,
+        c.branch,
+        c.country,
+        p.product_type,
+        p.product_name
+    HAVING SUM(t.invested_amount) - SUM(t.withdrawal_amount) > 0 
+),
+TotalPortfolio AS (
+    SELECT 
+        client_key,
+        SUM(net_portfolio_value) AS total_client_portfolio
+    FROM ClientPortfolio
+    GROUP BY client_key
+),
+DiversificationMetrics AS (
+    SELECT 
+        cp.client_key,
+        cp.client_full_name,
+        cp.branch,
+        cp.country,
+        COUNT(DISTINCT cp.product_type) AS distinct_product_types,
+        COUNT(DISTINCT cp.product_name) AS distinct_product_names,
+        tp.total_client_portfolio,
+        MAX(cp.net_portfolio_value) AS top_product_value,
+        CAST(MAX(net_portfolio_value) AS DECIMAL(18,2)) / 
+		NULLIF(CAST(total_client_portfolio AS DECIMAL(18,2)), 0) * 100 AS top_product_concentration_percent,
+        CASE 
+            WHEN COUNT(DISTINCT cp.product_type) = 1 
+            THEN 'Very High Risk'
+            WHEN COUNT(DISTINCT cp.product_type) = 2 
+               AND CAST(MAX(net_portfolio_value) AS DECIMAL(18,2)) / 
+			NULLIF(CAST(total_client_portfolio AS DECIMAL(18,2)), 0) * 100 >= 50
+            THEN 'High Risk'
+			WHEN COUNT(DISTINCT cp.product_type) = 2 
+               AND CAST(MAX(net_portfolio_value) AS DECIMAL(18,2)) / 
+			NULLIF(CAST(total_client_portfolio AS DECIMAL(18,2)), 0) * 100 < 50
+            THEN 'Moderate Risk'
+			WHEN COUNT(DISTINCT cp.product_type) = 3 
+                AND CAST(MAX(net_portfolio_value) AS DECIMAL(18,2)) / 
+			NULLIF(CAST(total_client_portfolio AS DECIMAL(18,2)), 0) * 100 >= 50 
+            THEN 'Low Risk'
+            ELSE 'Very Low Risk'
+        END AS concentration_risk
+    FROM ClientPortfolio cp
+    JOIN TotalPortfolio tp ON cp.client_key = tp.client_key
+    GROUP BY 
+        cp.client_key,
+        cp.client_full_name,
+        cp.branch,
+        cp.country,
+        tp.total_client_portfolio
+)
+SELECT 
+    client_key,
+    client_full_name,
+    branch,
+    country,
+    distinct_product_types,
+    distinct_product_names,
+    ROUND(total_client_portfolio, 2) AS total_portfolio_value,
+    cast(ROUND(top_product_concentration_percent, 2) as decimal (18, 2)) AS top_product_concentration_percent,
+    concentration_risk
+FROM
+	DiversificationMetrics
+ORDER BY 
+    top_product_concentration_percent DESC,
+    total_portfolio_value DESC;
+```
+
+With this tool, you can evaluate each client's portfolio individually, or you can aggregate results by branch or clients' country of residence for broader insights. For example:
+
+```sql
+WITH ClientPortfolio AS (
+    SELECT 
+        c.client_key,
+        c.client_full_name,
+        c.branch,
+        c.country,
+        p.product_type,
+        p.product_name,
+        SUM(t.invested_amount) - SUM(t.withdrawal_amount) AS net_portfolio_value
+    FROM gold.fact_transactions t
+    LEFT JOIN gold.dim_products p ON t.product_key = p.product_key
+    LEFT JOIN gold.dim_clients c ON t.client_key = c.client_key
+    WHERE t.transaction_date IS NOT NULL
+        AND (t.invested_amount > 0 OR t.withdrawal_amount > 0)
+        AND c.closure_date IS NULL -- Focus on active clients
+    GROUP BY 
+        c.client_key,
+        c.client_full_name,
+        c.branch,
+        c.country,
+        p.product_type,
+        p.product_name
+    HAVING SUM(t.invested_amount) - SUM(t.withdrawal_amount) > 0 
+),
+TotalPortfolio AS (
+    SELECT 
+        client_key,
+        SUM(net_portfolio_value) AS total_client_portfolio
+    FROM
+		ClientPortfolio
+    GROUP BY
+		client_key
+),
+DiversificationMetrics AS (
+    SELECT 
+        cp.client_key,
+        cp.client_full_name,
+        cp.branch,
+        cp.country,
+        COUNT(DISTINCT cp.product_type) AS distinct_product_types,
+        COUNT(DISTINCT cp.product_name) AS distinct_product_names,
+        tp.total_client_portfolio,
+        MAX(cp.net_portfolio_value) AS top_product_value,
+        CAST(MAX(net_portfolio_value) AS DECIMAL(18,2)) / 
+		NULLIF(CAST(total_client_portfolio AS DECIMAL(18,2)), 0) * 100 AS top_product_concentration_percent,
+        CASE 
+            WHEN COUNT(DISTINCT cp.product_type) = 1 
+            THEN 'Very High Risk'
+            WHEN COUNT(DISTINCT cp.product_type) = 2 
+               AND CAST(MAX(net_portfolio_value) AS DECIMAL(18,2)) / 
+			NULLIF(CAST(total_client_portfolio AS DECIMAL(18,2)), 0) * 100 >= 50
+            THEN 'High Risk'
+			WHEN COUNT(DISTINCT cp.product_type) = 2 
+               AND CAST(MAX(net_portfolio_value) AS DECIMAL(18,2)) / 
+			NULLIF(CAST(total_client_portfolio AS DECIMAL(18,2)), 0) * 100 < 50
+            THEN 'Moderate Risk'
+			WHEN COUNT(DISTINCT cp.product_type) = 3 
+                AND CAST(MAX(net_portfolio_value) AS DECIMAL(18,2)) / 
+			NULLIF(CAST(total_client_portfolio AS DECIMAL(18,2)), 0) * 100 >= 50 
+            THEN 'Low Risk'
+            ELSE 'Very Low Risk'
+        END AS concentration_risk
+    FROM
+		ClientPortfolio cp
+		LEFT JOIN TotalPortfolio tp ON cp.client_key = tp.client_key
+    GROUP BY 
+        cp.client_key,
+        cp.client_full_name,
+        cp.branch,
+        cp.country,
+        tp.total_client_portfolio
+),final as(
+SELECT 
+    client_key,
+    client_full_name,
+    branch,
+    country,
+    distinct_product_types,
+    distinct_product_names,
+    ROUND(total_client_portfolio, 2) AS total_portfolio_value,
+    CAST(ROUND(top_product_concentration_percent, 2) as decimal (18, 2)) AS top_product_concentration_percent,
+    concentration_risk
+FROM
+	DiversificationMetrics
+)
+SELECT
+    branch,
+    COUNT(CASE WHEN concentration_risk = 'Very High Risk' THEN 1 END) AS very_high_risk_clients,
+    COUNT(CASE WHEN concentration_risk = 'High Risk' THEN 1 END) AS high_risk_clients,
+    COUNT(CASE WHEN concentration_risk = 'Moderate Risk' THEN 1 END) AS moderate_risk_clients,
+	COUNT(CASE WHEN concentration_risk = 'Low Risk' THEN 1 END) AS low_risk_clients,
+    COUNT(CASE WHEN concentration_risk = 'Very Low Risk' THEN 1 END) AS very_low_risk_clients
+FROM
+	final
+WHERE
+	branch IS NOT NULL
+GROUP BY
+	branch
+ORDER BY
+	branch;
+```
+
+Resullts:
+| Branch      | Very High Risk Clients | High Risk Clients | Moderate Risk Clients | Low Risk Clients | Very Low Risk Clients |
+|-------------|------------------------|-------------------|-----------------------|------------------|-----------------------|
+| Amsterdam   | 34                     | 22                | 233                   | 30               | 408                   |
+| Berlin      | 34                     | 25                | 219                   | 20               | 357                   |
+| Bern        | 38                     | 30                | 262                   | 29               | 366                   |
+| Canberra    | 35                     | 26                | 255                   | 29               | 375                   |
+| London      | 37                     | 35                | 221                   | 29               | 363                   |
+| n/a         | 5                      | 5                 | 29                    | 5                | 42                    |
+| Ottawa      | 39                     | 15                | 235                   | 21               | 397                   |
+| Paris       | 47                     | 17                | 254                   | 23               | 372                   |
+| Seoul       | 37                     | 35                | 224                   | 28               | 343                   |
+| Singapore   | 34                     | 27                | 243                   | 19               | 364                   |
+| Stockholm   | 32                     | 22                | 236                   | 33               | 381                   |
+| Tokyo       | 37                     | 22                | 226                   | 24               | 359                   |
+| Washington  | 47                     | 24                | 248                   | 26               | 374                   |
