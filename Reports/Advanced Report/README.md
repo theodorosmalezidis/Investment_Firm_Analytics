@@ -429,4 +429,4 @@ Resullts:
 
 ![visual](/visual_documentation/charts/client_risk_distribution_with_numbers.png)
 
-*Bar chart visualizing annual client retention rate.This visualization was created with Python after importing my SQL query results*
+*Bar chart visualizing client risk distribution across branches. This visualization was created with Python after importing my SQL query results*
