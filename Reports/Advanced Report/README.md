@@ -450,7 +450,7 @@ Resullts:
 
 - OverallAverages CTE : Calculates organization-wide benchmarks by averaging key metrics across all employees using a subquery to first compute the average benchmark per employee.
          
--Final SELECT : Retrieves individual employee performance metrics and compares them against the overall benchmarks. 
+- Final SELECT : Retrieves individual employee performance metrics and compares them against the overall benchmarks. 
   
 ```sql
 WITH ClientNetPortfolio AS (
