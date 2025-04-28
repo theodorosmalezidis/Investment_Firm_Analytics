@@ -198,7 +198,7 @@ Key Findings :
 - The largest drop occurred between 2021 and 2022 (-1.11%).
 - All years fall into the "Good Retention" category.
      
-## 5. Client Portfolio Diversification & Risk Assessment
+## 3. Client Portfolio Diversification & Risk Assessment
 
 This query was designed as a Client Portfolio Diversification & Risk Assessment Tool.
 
@@ -430,3 +430,149 @@ Resullts:
 ![visual](/visual_documentation/charts/client_risk_distribution_with_numbers.png)
 
 *Bar chart visualizing client risk distribution across branches. This visualization was created with Python after importing my SQL query results*
+
+
+## 4. Employee Efficiency in Client Management
+
+- **Purpose:** This query serves as a tool to evaluate and support the performance of employees in client management by using four key metrics as benchmarks. These metrics include:
+1.	Number of clients handled
+2.	Average client duration (tenure with the company)
+3.	Average portfolio net value per client
+4.	Total assets under management (AUM)
+
+- **Insights:**  Each employee's metrics are compared against company-wide averages,allowing for easy identification of top performers.
+
+- **Value:** Data-driven workforce development by uncovering employee strengths and areas for growth in client engagement and portfolio oversight.
+
+### Query Overview: 
+
+- ClientNetPortfolio CTE : Calculates the net portfolio value for each client. 
+
+- OverallAverages CTE : Calculates organization-wide benchmarks by averaging key metrics across all employees using a subquery to first compute the average benchmark per employee.
+         
+-Final SELECT : Retrieves individual employee performance metrics and compares them against the overall benchmarks. 
+  
+```sql
+WITH ClientNetPortfolio AS (
+		   SELECT	        
+				client_key,
+		        SUM(invested_amount) - SUM(withdrawal_amount) AS portfolio_net_value
+		    FROM gold.fact_transactions
+		    GROUP BY client_key
+		),
+		OverallAverages AS (
+		    SELECT
+		        CAST(ROUND(AVG(client_count * 1.0), 2) AS DECIMAL (18, 2))  AS avg_clientscount_overall,
+		        CAST(ROUND(AVG(avg_days * 1.0), 2) AS DECIMAL (18, 2)) AS avg_days_overall,
+		        CAST(ROUND(AVG(avg_portfolio_net_value * 1.0), 2) AS DECIMAL (18, 2)) AS avg_net_value_overall,
+				CAST(ROUND(AVG(total_aum * 1.0), 2) AS DECIMAL (18, 2)) AS avg_total_aum
+
+		    FROM (
+		        SELECT
+		            f.employee_key,
+		            COUNT(DISTINCT f.client_key) AS client_count,
+		            AVG(DATEDIFF(DAY, c.create_date, COALESCE(c.closure_date, GETDATE()))) AS avg_days,
+		            AVG(p.portfolio_net_value) AS avg_portfolio_net_value,
+					SUM(portfolio_net_value) AS total_aum
+		        FROM gold.fact_employee_client f
+		        LEFT JOIN gold.dim_clients c ON f.client_key = c.client_key
+		        LEFT JOIN ClientNetPortfolio p ON c.client_key = p.client_key
+		        WHERE c.create_date IS NOT NULL
+		        GROUP BY f.employee_key
+		    ) AS per_employee
+		)
+		SELECT
+		    e.employee_full_name,
+		    COUNT(DISTINCT c.client_key) AS clientscount,
+			a.avg_clientscount_overall,
+		    AVG(DATEDIFF(DAY, c.create_date, COALESCE(c.closure_date, GETDATE()))) AS avg_days,
+			 a.avg_days_overall,
+		    AVG(p.portfolio_net_value) AS avg_portfolio_net_value,
+			 a.avg_net_value_overall,
+		    SUM(portfolio_net_value) as total_aum,
+			 a.avg_total_aum
+		    -- These are the reference benchmarks
+FROM gold.dim_employees e
+		LEFT JOIN gold.fact_employee_client f ON e.employee_key = f.employee_key
+		LEFT JOIN gold.dim_clients c ON f.client_key = c.client_key
+		LEFT JOIN ClientNetPortfolio p ON c.client_key = p.client_key
+		CROSS JOIN OverallAverages a  -- This brings the overall averages into each row
+WHERE 
+	c.create_date IS NOT NULL
+GROUP BY 
+	e.employee_full_name, a.avg_clientscount_overall, a.avg_days_overall, a.avg_net_value_overall,a.avg_total_aum
+ORDER BY 
+	avg_days DESC;
+```
+
+To identify top performers (employees whose averages exceed company-wide averages across all key metrics):
+
+```sql
+WITH ClientNetPortfolio AS (
+		   SELECT	        
+				client_key,
+		        SUM(invested_amount) - SUM(withdrawal_amount) AS portfolio_net_value
+		    FROM gold.fact_transactions
+		    GROUP BY client_key
+		),
+		OverallAverages AS (
+		    SELECT
+		        CAST(ROUND(AVG(client_count * 1.0), 2) AS DECIMAL (18, 2))  AS avg_clientscount_overall,
+		        CAST(ROUND(AVG(avg_days * 1.0), 2) AS DECIMAL (18, 2)) AS avg_days_overall,
+		        CAST(ROUND(AVG(avg_portfolio_net_value * 1.0), 2) AS DECIMAL (18, 2)) AS avg_net_value_overall,
+				CAST(ROUND(AVG(total_aum * 1.0), 2) AS DECIMAL (18, 2)) AS avg_total_aum
+
+		    FROM (
+		        SELECT
+		            f.employee_key,
+		            COUNT(DISTINCT f.client_key) AS client_count,
+		            AVG(DATEDIFF(DAY, c.create_date, COALESCE(c.closure_date, GETDATE()))) AS avg_days,
+		            AVG(p.portfolio_net_value) AS avg_portfolio_net_value,
+					SUM(portfolio_net_value) AS total_aum
+		        FROM gold.fact_employee_client f
+		        LEFT JOIN gold.dim_clients c ON f.client_key = c.client_key
+		        LEFT JOIN ClientNetPortfolio p ON c.client_key = p.client_key
+		        WHERE c.create_date IS NOT NULL
+		        GROUP BY f.employee_key
+		    ) AS per_employee
+		),Final AS(
+		SELECT
+		    e.employee_full_name,
+		    COUNT(DISTINCT c.client_key) AS clientscount,
+			a.avg_clientscount_overall,
+		    AVG(DATEDIFF(DAY, c.create_date, COALESCE(c.closure_date, GETDATE()))) AS avg_days,
+			 a.avg_days_overall,
+		    AVG(p.portfolio_net_value) AS avg_portfolio_net_value,
+			 a.avg_net_value_overall,
+		    SUM(portfolio_net_value) as total_aum,
+			 a.avg_total_aum
+		    -- These are the reference benchmarks
+FROM gold.dim_employees e
+		LEFT JOIN gold.fact_employee_client f ON e.employee_key = f.employee_key
+		LEFT JOIN gold.dim_clients c ON f.client_key = c.client_key
+		LEFT JOIN ClientNetPortfolio p ON c.client_key = p.client_key
+		CROSS JOIN OverallAverages a  -- This brings the overall averages into each row
+WHERE 
+	c.create_date IS NOT NULL
+GROUP BY 
+	e.employee_full_name, a.avg_clientscount_overall, a.avg_days_overall, a.avg_net_value_overall,a.avg_total_aum
+)
+SELECT
+	employee_full_name,
+	clientscount,
+	avg_clientscount_overall,
+	avg_days,
+	avg_days_overall,
+	avg_portfolio_net_value,
+	avg_net_value_overall,
+	total_aum,
+	avg_total_aum
+From 
+	Final
+WHERE
+	clientscount>avg_clientscount_overall AND avg_days>avg_days_overall AND avg_portfolio_net_value>avg_net_value_overall AND total_aum>avg_total_aum;
+```
+
+
+
+
