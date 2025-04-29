@@ -577,7 +577,7 @@ WHERE
 
 This is an evaluation tool for product performance  that assesses the relationship between employee analysis activity and the corresponding asset growth (AUM). It helps organizations understand whether the level of analysis dedicated to a product aligns with its actual performance.
 
--**Purpose:** The tool evaluates each product's performance by comparing the level of analysis activity (employee effort) against
+**Purpose:** The tool evaluates each product's performance by comparing the level of analysis activity (employee effort) against
 the actual asset growth (AUM)  achieved by the product.
      
 
