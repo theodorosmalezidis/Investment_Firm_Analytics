@@ -573,6 +573,95 @@ WHERE
 	clientscount>avg_clientscount_overall AND avg_days>avg_days_overall AND avg_portfolio_net_value>avg_net_value_overall AND total_aum>avg_total_aum;
 ```
 
+## 5. Product Performance Analysis and Employee Engagement
+
+This is an evaluation tool for product performance  that assesses the relationship between employee analysis activity and the corresponding asset growth (AUM). It helps organizations understand whether the level of analysis dedicated to a product aligns with its actual performance.
+
+-**Purpose:** The tool evaluates each product's performance by comparing the level of analysis activity (employee effort) against
+the actual asset growth (AUM)  achieved by the product.
+     
+
+ **Insights** : 
+
+- Overanalyzed Products : Products receiving excessive attention but showing limited or below-average AUM growth.
+- Underanalyzed Products : Products receiving minimal attention despite strong or above-average AUM growth.
+- Sufficiently Analyzed Products : Products where the level of analysis matches their AUM performance.
+- Categorization of Asset Growth : Identifies products with strong, moderate, or low asset growth.
+     
+
+**Value:**
+
+- Mismatch Identification : Highlights mismatches between employee effort and product outcomes (e.g., high-effort/low-growth or low-effort/high-growth products).
+- Resource Optimization : Guides better allocation of analyst resources by identifying underperforming products that are overanalyzed or high-potential products that are neglected.
+- Strategic Prioritization : Helps prioritize products for further analysis, investment, or deprioritization based on their performance and resource alignment.
+
+### Query Overview: 
+
+- ProductsStats CTE: Aggregates product-level metrics by calculating the analysis activity and asset growth for each product.
+
+- ProductsAvgs CTE: Calculates organization-wide benchmarks for analysis activity and asset growth using the aggregated data from the ProductsStats CTE.
+
+- Final SELECT Statement: Retrieves individual product metrics and compares them against the organization-wide benchmarks.
+
+    - Analysis Valuation :
+        - Overanalyzed: Products analyzed by 10 or more employees.
+        - Sufficient_Analyzed: Products analyzed by 5–9 employees.
+        - Underanalyzed: Products analyzed by fewer than 5 employees.
+                    
+    - AUM Valuation :
+        - Strong_Asset_Growth: Products with AUM ≥ 16,000,000.
+        - Moderate_Asset_Growth: Products with AUM between 8,000,000 and 15,999,999.
+        - Low_Asset_Growth: Products with AUM < 8,000,000.
+                 
+Results are sorted by analyze_count in descending order.
+         
+    
+```sql
+WITH ProductsStats AS(
+	SELECT
+		p.product_name,
+		COUNT(DISTINCT employee_key) AS analyze_count,
+		SUM(invested_amount)-SUM(withdrawal_amount) AS product_AUM
+	FROM
+		gold.fact_employee_product e
+	LEFT JOIN gold.dim_products p 
+		ON e.product_key=p.product_key
+	LEFT JOIN gold.fact_transactions t 
+		ON p.product_key=t.product_key
+	GROUP BY
+		p.product_name
+),
+ProductsAvgs AS (
+	SELECT
+		CAST(ROUND(AVG(analyze_count * 1.0), 2) AS DECIMAL (18, 2)) AS avg_analyze_count,
+		CAST(ROUND(AVG(product_AUM * 1.0), 2) AS DECIMAL (18, 2)) AS avg_product_AUM
+	FROM ProductsStats
+)
+SELECT
+	ps.product_name,
+	ps.analyze_count,
+	pa.avg_analyze_count,
+	ps.product_AUM,
+	pa.avg_product_AUM,
+	CASE
+		WHEN ps.analyze_count>=10 THEN 'Overanalyzed'
+		WHEN ps.analyze_count>=5 THEN 'Sufficient_Analyzed'
+		ELSE 'Underanalyzed'
+		END AS analyze_valuation,
+	CASE
+		WHEN ps.product_AUM>=16000000 THEN 'Strong_Asset_Growth'
+		WHEN ps.product_AUM>=8000000 THEN 'Moderate_Asset_Growth'
+		ELSE 'Low_Asset_Growth'
+		END AS AUM_valuation
+FROM
+	ProductsStats ps
+	CROSS JOIN ProductsAvgs pa
+WHERE
+	PS.product_name IS NOT NULL
+ORDER BY
+	analyze_count DESC
+```
+     
 
 
 
