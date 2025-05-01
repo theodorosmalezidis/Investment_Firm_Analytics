@@ -1,3 +1,5 @@
+![visual](visual_documentation/png/basic_report.png)
+
 # Introduction
 
 This is a data analysis project that follows up on my data engineering work, where I developed an end-to-end, on-premise data warehouse for an investment firm (You can find the full data engineering project [here](https://github.com/theodorosmalezidis/DWH_project/tree/main)).
