@@ -1,4 +1,4 @@
-![visual](visual_documentation/png/pr_image.png)
+![visual](visual_documentation/png/pr_image.jpg)
 
 # Introduction
 
