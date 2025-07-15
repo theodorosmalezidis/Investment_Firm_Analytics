@@ -219,9 +219,26 @@ Poor Retention (Below 60%)
 
 Key Findings : 
 
-- Retention rates have remained stable, averaging 85%.
-- The largest drop occurred between 2021 and 2022 (-1.11%).
-- All years fall into the "Good Retention" category.
+- All cohort years fall within the “Excellent” retention range (90%–100%), showing consistently strong short-term client loyalty.
+- Retention rates declined slightly from 2020 to 2023, hitting a low of 91.30% in 2023 (still excellent, but downward trend).
+- 2024 rebounded with a strong YoY improvement of +1.22%, the only positive change.
+- 2025 dropped again by -1.46%, the sharpest YoY decline in the series.
+
+Concerns :
+
+- Despite being in the “Excellent” category, the trend is inconsistent — 3 consecutive years of decline, a rebound, followed by another dip.
+
+- The drop in 2025, even if retention is still high, may indicate emerging issues in early client engagement or onboarding.
+
+- If this downward pressure continues, future cohorts could slip into the Good (80%–89.99%) zone, which would signal a clear deterioration in retention performance.
+
+Recommended Actions :
+
+- Review client onboarding processes in the last two years to identify what improved retention in 2024 and what possibly failed in 2025.
+
+- Identify what worked in the 2024 cohort (e.g., specific campaigns, advisors, product mixes) and integrate those practices into the 2025+ onboarding flow.
+
+- Gather structured feedback from both retained and churned clients in each cohort to understand their behavior and actions.
      
 ## 3. Client Portfolio Diversification & Risk Assessment
 
