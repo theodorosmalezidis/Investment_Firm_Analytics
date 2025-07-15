@@ -201,7 +201,7 @@ ORDER BY
 
 ```
 
-![visual](/visual_documentation/charts/combined_retention_and_difference_chart.png)
+![visual](/visual_documentation/charts/retention_rate_yoy_difference.png)
 
 *Bar chart visualizing annual client retention rate.This visualization was created with Python after importing my SQL query results*
 
