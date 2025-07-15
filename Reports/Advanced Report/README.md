@@ -132,13 +132,13 @@ Key Findings:
      
 ## 2. Annual Client Retention Rate
 
-- **Purpose:** The retention rate when is high indicates low churn (few clients leaving), while a low retention rate indicates high churn (many clients leaving).
+- **Purpose:** The retention rate shows the percentage of clients from each cohort year (based on join date) who remained active at the end of the following year. A high rate indicates strong short-term retention, while a low rate signals early churn among newly acquired clients.
 
-- **Insight:** Identifies trends in client loyalty and retention effectiveness across different onboarding years, revealing patterns in long-term client engagement.
+- **Insight:** Measures how well the firm retains clients after one full year of onboarding. This highlights differences in early client engagement across years, helping identify which cohorts had stronger or weaker retention outcomes.  
 
-- **Value:** Supports strategic planning by uncovering retention strengths or weaknesses, helping the firm improve client experience and improving customer loyalty.
+- **Value:** Enables the firm to evaluate the effectiveness of client onboarding and early relationship management. By tracking one-year retention across cohorts, the firm can refine marketing, onboarding, and service strategies to improve long-term client value.
 
-First I find the count of total clients who joined each year in the JoinedClients CTE and then those who remained active in the RetainedClients CTE, using a LEFT JOIN to align the two CTE s by year and calculate the retention rate as the percentage of retained clients relative to total clients joined, with the results ordered chronologically by year.
+First, I calculate the number of clients who joined in each year using the JoinedClients CTE. Then, in the RetainedNextYear CTE, I count how many of those clients were still active at the end of the following calendar year. These two datasets are aligned by cohort year using a LEFT JOIN, and the retention rate is computed as the percentage of retained clients relative to those who joined. The final query includes a year-over-year (YoY) difference to assess whether retention improved or declined compared to the previous cohort year, with results displayed in chronological order.
 
 ```sql
 WITH JoinedClients AS (
