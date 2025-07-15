@@ -142,38 +142,63 @@ First I find the count of total clients who joined each year in the JoinedClient
 
 ```sql
 WITH JoinedClients AS (
-	SELECT
-		YEAR(create_date) AS year_joined,
-		CAST(COUNT(client_key) AS DECIMAL (18, 2)) AS total_client_joined
-	FROM
-		gold.dim_clients
-	WHERE
-		create_date IS NOT NULL
-	GROUP BY
-		YEAR(create_date)
+    SELECT
+        YEAR(create_date) AS cohort_year,
+        COUNT(client_key) AS total_joined
+    FROM
+        gold.dim_clients
+    WHERE
+        create_date IS NOT NULL
+    GROUP BY
+        YEAR(create_date)
 ),
-RetainedCients AS (
-	SELECT
-		YEAR(create_date) AS year_joined,
-		CAST(COALESCE(COUNT(client_key), 0) AS DECIMAL (18, 2))  AS total_client_retained
-	FROM
-		gold.dim_clients
-	WHERE
-		create_date IS NOT NULL AND closure_date IS NULL
-	GROUP BY
-		YEAR(create_date)
+RetainedNextYear AS (
+    SELECT
+        YEAR(create_date) AS cohort_year,
+        COUNT(client_key) AS total_retained_next_year
+    FROM
+        gold.dim_clients
+    WHERE
+        create_date IS NOT NULL
+        AND (
+            closure_date IS NULL
+            OR closure_date > DATEFROMPARTS(YEAR(create_date) + 1, 12, 31)
+        )
+    GROUP BY
+        YEAR(create_date)
+),
+RetentionRates AS (
+    SELECT
+        j.cohort_year,
+        j.total_joined,
+        COALESCE(r.total_retained_next_year, 0) AS total_retained_next_year,
+        CAST(
+            ROUND(
+                (COALESCE(r.total_retained_next_year, 0) * 100.0) / j.total_joined,
+                2
+            ) AS DECIMAL(5, 2)
+        ) AS retention_rate
+    FROM
+        JoinedClients j
+        LEFT JOIN RetainedNextYear r ON j.cohort_year = r.cohort_year
 )
 SELECT
-	j.year_joined,
-	total_client_joined,
-	total_client_retained,
-	CAST(ROUND((COALESCE(r.total_client_retained, 0)/j.total_client_joined) * 100, 2) AS DECIMAL (18, 2)) AS retention_rate
+    cohort_year,
+    total_joined,
+    total_retained_next_year,
+    retention_rate,
+    CAST(
+        ROUND(
+            retention_rate - LAG(retention_rate) OVER (ORDER BY cohort_year),
+            2
+        ) AS DECIMAL(5, 2)
+    ) AS yoy_retention_diff
 FROM
-	JoinedClients j
-		LEFT JOIN RetainedCients r
-	ON j.year_joined=r.year_joined
+    RetentionRates
 ORDER BY
-	year_joined
+    cohort_year;
+
+
 ```
 
 ![visual](/visual_documentation/charts/combined_retention_and_difference_chart.png)
