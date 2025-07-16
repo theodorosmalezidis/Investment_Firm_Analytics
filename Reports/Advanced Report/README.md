@@ -114,21 +114,35 @@ ORDER BY
 		fiscal_year,
 		fiscal_quarter;
 ```
-![visual](/visual_documentation/charts/quarterly_aum_and_qoq_changes.png)
+![visual](/visual_documentation/charts/aum_cumulative_qoq.png)
 
 *Bar chart visualizing QoQ Cumulative AUM change.This visualization was created with Python after importing my SQL query results*
 
 Key Findings:
 
-- Strong Initial Growth in 2020 : The first quarter of 2020 started with a relatively low AUM of $10.98M , but the cumulative AUM grew significantly by 492.75% QoQ  in Q2 2020, driven by a substantial quarterly AUM of $54.10M.
+1. Strong Initial Growth (2020):
 
-- Consistent Quarterly Growth Until 2021 : From Q2 2020 to Q4 2021, the cumulative AUM showed consistent growth, albeit at a declining QoQ percentage rate (from 492.75%  in Q2 2020 to 16.64%  in Q4 2021).
+- The first quarter of 2020 started with a relatively low AUM of $10.98M , but the cumulative AUM grew significantly by 492.75% QoQ  in Q2 2020, driven by a substantial quarterly AUM of $54.10M.
 
-- Gradual Decline in Growth Rates : Starting from Q1 2022, the QoQ growth rates steadily decreased, ranging from 12.92%  in Q1 2022 to 3.31%  in Q1 2025, indicating slowing momentum in asset accumulation.
+2. Stabilization Begins (2021–2022):
 
-- Partial-Year Data for 2025 : The Q1 2025 data reflects only the first quarter of the year and shows a QoQ growth rate of 3.31% , which is the lowest recorded growth rate in the dataset. However, this is not directly comparable to previous full quarters due to the partial-year nature of the data.
+- From 2021 onward, the QoQ growth gradually declines each quarter — from ~31% in 2021 Q1 to ~9% by end of 2022.
 
-- Peak Quarterly AUM : The highest quarterly AUM was recorded in Q2 2020  at $54.10M , contributing to the sharp initial growth.
+- This suggests the firm was entering a more mature and stable growth phase after its rapid start.
+
+3. Plateauing Trend (2023–2025):
+
+- The growth rate continues to decline quarter by quarter, reaching just 3.31% in 2025 Q1.
+
+- Cumulative AUM is still increasing, but at a slower pace, hinting at market saturation, fewer new large clients, or limited expansion opportunities.
+ 
+ Interpretation:
+
+- Initial Surge indicates aggressive onboarding, possibly new product launches or market entry.
+
+- Slowing Growth is not necessarily negative — it can reflect stability and consolidation after rapid expansion.
+
+- However, continuous decline in QoQ growth could signal a need to reassess strategy, innovate offerings, or target new markets to maintain momentum.
      
 ## 2. Annual Client Retention Rate
 
