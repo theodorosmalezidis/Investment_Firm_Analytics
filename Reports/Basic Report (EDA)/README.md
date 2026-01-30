@@ -61,15 +61,15 @@ Results
 
 | Metric Name                     | Metric Value    |
 |--------------------------------|------------------|
-| Total AUM                      | 971,799,739      |
+| Total AUM                      | 971799739        |
 | Total Fees                     | 17759343.27      |                       
-| Total Invested Amount          | 1,452,987,114    |
-| Total Withdrawn Amount         | 481,187,375      |
-| Total Transactions Count       | 299,042          |
-| Total Investments Count        | 223,207          |
-| Total Withdrawals Count        | 75,836           |
-| Total Active Clients Count     | 8,494            |
-| Total Inactive Clients Count   | 1,506            |
+| Total Invested Amount          | 1452987114       |
+| Total Withdrawn Amount         | 481187375        |
+| Total Transactions Count       | 299042           |
+| Total Investments Count        | 223207           |
+| Total Withdrawals Count        | 75836            |
+| Total Active Clients Count     | 8494             |
+| Total Inactive Clients Count   | 1506             |
 | Total Hired Employees Count    | 300              |
 | Total Active Employees Count   | 282              |
 | Total Former Employees Count   | 18               |
