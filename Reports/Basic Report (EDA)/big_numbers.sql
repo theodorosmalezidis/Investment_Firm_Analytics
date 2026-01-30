@@ -7,6 +7,9 @@ SELECT metric_name, metric_value
 FROM (
 	SELECT 'Total AUM' AS metric_name, SUM(invested_amount) - SUM(withdrawal_amount) AS metric_value, 1 AS order_column
     	FROM gold.fact_transactions --Assets Under Management in USD
+	UNION ALL
+   	SELECT 'Total Fees' AS metric_name, SUM(fee_amount ) AS metric_value, 15 AS order_column
+    	FROM gold.fact_transactions --Total Fees Collected in USD
    	UNION ALL
 	SELECT 'Total Invested Amount' AS metric_name, SUM(invested_amount) AS metric_value, 2 AS order_column
     	FROM gold.fact_transactions --in USD
