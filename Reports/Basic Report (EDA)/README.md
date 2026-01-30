@@ -59,10 +59,10 @@ Results
 
 ### Key Metrics Summary
 
-| Metric Name                     | Metric Value     |
+| Metric Name                     | Metric Value    |
 |--------------------------------|------------------|
 | Total AUM                      | 971,799,739      |
-| Total Fees                     |                        
+| Total Fees                     | 17759343.27      |                       
 | Total Invested Amount          | 1,452,987,114    |
 | Total Withdrawn Amount         | 481,187,375      |
 | Total Transactions Count       | 299,042          |
