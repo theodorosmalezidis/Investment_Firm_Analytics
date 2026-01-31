@@ -75,122 +75,181 @@ Results
 | Total Former Employees Count   | 18               |
 | Total Holdings Count           | 523              |
 
-## **2. Categorization:** Segments data by key dimensions to analyze contributions and distributions across the business.
+## **2. Segmentation & Distribution Analysis:** Try to identify patterns in regional performance, product popularity and performance and long-term trends.
 
-**a) Client Analysis**
+**a) Branch Analysis**
 
-These queries categorize and count clients across different dimensions to help understand customer distribution.
+💡 This query analyzes the distribution of clients and the transaction volume across the branches of the firm while revealing regional perfomance and their contribution to the firm's total AUM and revenue.
 
-By Branch: Number of clients managed per branch.
 
-By Country: Geographic distribution of the client base.
-
-By Gender: Gender-based segmentation of clients.
-
-By Marital Status: Analysis of client marital demographics.
-
-💡 Useful for assessing geographic concentration, diversity, and service spread.
-
-For example:
  ```sql
-        SELECT
-    branch,
-    COUNT (client_key) AS total_clients_count
-FROM
-    gold.dim_clients
-GROUP BY
-    branch
-ORDER BY
-    total_clients_count DESC;
+ 
+ with clients_per_branch as 
+					 (
+					 select
+						   e.branch
+						 , c.client_key 
+					from
+						gold.fact_employee_client c
+							 left join
+								gold.dim_employees e
+									on e.employee_key=c.employee_key
+					),
+client_totals as 
+				(
+				select
+					  client_key
+					, count(transaction_key) as transanctions_per_client
+					, sum(fee_amount) as total_fee_per_client
+					, sum(invested_amount-withdrawal_amount) as AUM_per_client
+				from
+					gold.fact_transactions
+				group by
+					client_key
+				)
+select
+	  b.branch
+	, count(distinct b.client_key) as branch_clients
+	, sum(c.transanctions_per_client) as branch_transactions
+	, sum(c.total_fee_per_client) as total_fees
+	, sum(c.AUM_per_client) as total_AUM
+	, cast((count(distinct b.client_key)*100.0)/sum(count(distinct b.client_key)) over() as decimal(10,2)) as perc_of_total_clients
+	, cast((sum(c.transanctions_per_client)*100.0)/sum(sum(c.transanctions_per_client)) over() as decimal(10,2)) as perc_of_total_transactions
+	, cast((sum(c.total_fee_per_client)*100.0)/sum(sum(c.total_fee_per_client)) over() as decimal(10,2)) as perc_of_total_fees
+	, cast((sum(c.AUM_per_client)*100.0)/sum(sum(c.AUM_per_client)) over() as decimal(10,2)) as perc_of_total_AUM
+from
+	clients_per_branch b
+		left join
+			client_totals c
+				on b.client_key=c.client_key 
+group by
+	branch
+order by
+    total_AUM desc
 ```
-![visual](/visual_documentation/charts/total_clients_per_branch.png)
 
-*Bar chart visualizing total clients per branch.This chart was created with Python after importing my SQL query results*
 
-**b) Product Analysis (Holdings)**
+**Results**
 
-Analyzes the count of financial products held by clients, segmented by product type:
+| Branch | Clients | Transactions | Total Fees | Total AUM | % Clients | % Trans | % Fees | % AUM |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Berlin** | 1,134 | 33,704 | 1,986,901.58 | 110,642,778 | 11.34% | 11.28% | 11.23% | 11.42% |
+| **Paris** | 1,147 | 34,432 | 2,007,322.42 | 107,682,037 | 11.47% | 11.52% | 11.35% | 11.12% |
+| **Ottawa** | 1,083 | 32,600 | 1,925,058.68 | 105,053,944 | 10.83% | 10.91% | 10.88% | 10.84% |
+| **Stockholm** | 967 | 28,319 | 1,724,048.76 | 95,892,745 | 9.67% | 9.47% | 9.74% | 9.90% |
+| **Canberra** | 882 | 26,568 | 1,525,068.44 | 84,026,361 | 8.82% | 8.89% | 8.62% | 8.67% |
+| **Bern** | 890 | 26,308 | 1,543,968.62 | 80,745,362 | 8.90% | 8.80% | 8.73% | 8.34% |
+| **Singapore** | 835 | 24,915 | 1,478,772.49 | 79,967,504 | 8.35% | 8.34% | 8.36% | 8.25% |
+| **Amsterdam** | 789 | 23,356 | 1,403,241.37 | 79,618,148 | 7.89% | 7.81% | 7.93% | 8.22% |
+| **Seoul** | 783 | 23,220 | 1,392,709.83 | 76,505,891 | 7.83% | 7.77% | 7.87% | 7.90% |
+| **Washington** | 556 | 16,526 | 962,497.61 | 54,448,561 | 5.56% | 5.53% | 5.44% | 5.62% |
+| **London** | 474 | 14,308 | 853,042.96 | 46,367,711 | 4.74% | 4.79% | 4.82% | 4.79% |
+| **Tokyo** | 432 | 12,870 | 776,187.24 | 41,577,947 | 4.32% | 4.31% | 4.39% | 4.29% |
+| **n/a** | 28 | 1,764 | 113,255.50 | 6,204,318 | 0.28% | 0.59% | 0.64% | 0.64% |
 
-By Product Type: Shows how many unique products (e.g., stocks, bonds, ETFs) exist under each category.
+**b) Product Type Analysis**
 
-💡 Highlights the product mix and can support decisions about offering more diversified or targeted financial products.
+💡 Using first a cte to aggregate by product first, then in main query i aggregate by product type to indentify the contribution of each type to firm' s total AUM and revenue and transactions. 
 
 ```sql
-SELECT
-    product_type,
-    COUNT (product_key) AS total_products_count
-FROM
-    gold.dim_products
-GROUP BY
-    product_type
-ORDER BY
-    total_products_count DESC;
+--create a cte to aggregate by product
+with product_type_totals as
+							(
+							select
+								p.product_type,
+								p.product_key,
+								isnull(sum(t.invested_amount)-sum(t.withdrawal_amount), 0) as product_AUM,
+								isnull(sum(t.fee_amount), 0) as product_fees,
+								count(t.transaction_key) as product_transactions
+							from
+								gold.dim_products p
+									left join
+										gold.fact_transactions t
+											on 
+												p.product_key=t.product_key
+							group by
+								p.product_type,
+								p.product_key
+							)
+select														-- and the aggregate by product type in main query
+	product_type,
+	sum(product_transactions) as total_transactions,
+	sum(product_AUM) as total_aum,--in USD
+	sum(product_fees) as total_fees,--in USD
+	cast(sum(product_transactions)*100.0/sum(sum(product_transactions)) over() as decimal(10,2)) as perc_of_total_transactions,--window function helps find perc of each product type s nr. of transactions in firm s total
+	cast(sum(product_AUM)*100.0/sum(sum(product_AUM)) over() as decimal(10,2)) as perc_of_total_AUM,--window function helps find perc of each product type s total AUM in firm s total
+	cast(sum(product_fees)*100.0/sum(sum(product_fees)) over() as decimal(10,2)) as perc_of_total_fees--window function helps find perc of each product type s total fees in firm s total
+from		
+	product_type_totals
+group by
+	product_type
+order by
+	total_aum desc;
 ```
-![visual](/visual_documentation/charts/product_count_by_type.png)
+**Results**
 
-*Bar chart visualizing total products by type.This chart was created with Python after importing my SQL query results*
+| Product Type | Transactions | Total AUM | Total Fees | % Trans | % AUM | % Fees |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **STOCK** | 259,200 | 838,678,216 | 16,677,155.00 | 86.69% | 86.56% | 93.91% |
+| **ETF** | 23,172 | 77,370,512 | 754,510.65 | 7.75% | 7.99% | 4.25% |
+| **BOND** | 16,640 | 52,809,234 | 327,677.62 | 5.56% | 5.45% | 1.85% |
 
-**c) AUM (Assets Under Management) Analysis**
+**c) Transactions Analysis**
 
-This section calculates net AUM by subtracting total withdrawals from total investments, allowing you to understand how assets are distributed across various business dimensions:
-
-By Product Type: Displays total net AUM held in each type of financial product (e.g., stocks, bonds, ETFs).
-
-By Branch: Highlights the total AUM managed by each branch, useful for understanding asset distribution.
-
-By Country: Breaks down AUM by client country to see how asset holdings are spread geographically.
-
-For example:
+💡 This section analyzes typical behaviors through averages of invested and withdrawal amounts, extreme with the biggest single buys and sells moves, and the average fee the firm collects every time someone clicks "trade."
 ```sql
-
-SELECT
-    product_type,
-    SUM(invested_amount) - SUM(withdrawal_amount) AS total_aum
-FROM
-    gold.dim_products p
-LEFT JOIN gold.fact_transactions t
-ON p.product_key=t.product_key
-GROUP BY
-    product_type
-ORDER BY
-    total_aum DESC;
+select
+	count(transaction_key) as total_transactions,
+	round(avg(invested_amount), 2) as avg_amount_per_invest,
+    round(avg(withdrawal_amount), 2) as avg_amount_per_withdrawal,
+    max(invested_amount) as mvit, --most valuable invested transaction
+    min(NULLIF(invested_amount, 0)) as lvit, --least valuable invested transaction
+	max(withdrawal_amount) as mvwt, --most valuable withdrawal transaction
+    min(NULLIF(withdrawal_amount, 0)) as lvwt, --least valuable withdrawal transaction
+	cast(avg(fee_amount) as decimal (10,2)) as avg_fee_per_transaction
+from
+	gold.fact_transactions;
 ```
-![visual](/visual_documentation/charts/aum_by_product_type.png)
+**Results**
+
+| Metric | Value |
+| :--- | :--- |
+| **Total Transactions** | 299,998 |
+| **Avg. Amount per Invest** | 4,843.00 |
+| **Avg. Amount per Withdrawal** | 1,603.00 |
+| **Most Valuable Invested Transaction (mvit)** | 99,974.00 |
+| **Least Valuable Invested Transaction (lvit)** | 100.00 |
+| **Most Valuable Withdrawal (mvwt)** | 99,987.00 |
+| **Least Valuable Withdrawal (lvwt)** | 100.00 |
+| **Avg. Fee per Transaction** | 59.20 |
 
 *Bar chart visualizing total AUM by product type.This chart was created with Python after importing my SQL query results*
 
-**d) Employee Analysis**
+**d) Monthly Trends**
 
-Provides a breakdown of employees across different organizational dimensions:
+💡This is a time series analysis revealing the evolution of the firm from an early growth stage to a more mature status 
+through monthly total transactions, AUM, revenue and averages invested and withdrawal amounts.
 
-By Branch: Employee count per branch.
-
-By Department: Breakdown by operational function (e.g., Sales, Support).
-
-By Position: Insights into workforce structure and role distribution.
-
-By Gender: Gender-based segmentation of employees.
-
-By Marital Status: Demographic insight for HR and policy-making.
-
-💡 Supports workforce planning, HR diversity assessments, and departmental resource allocation.
-
-For example:
  ```sql
-SELECT
-	position,
-	COUNT (employee_key) AS total_employees
-FROM
-	gold.dim_employees
-GROUP BY
-	position
-ORDER BY
-	total_employees DESC;
+select 
+	  datename(year, transaction_date) as year
+    , datename(month, transaction_date) as month
+    , count(transaction_key) AS monthly_transactions
+	, sum(invested_amount)-sum(withdrawal_amount) as monthly_AUM
+	, sum(fee_amount) as monthly_fees
+	, cast(sum(invested_amount)/count(invested_amount ) as decimal (10,2)) as avg_invested_amount
+	, cast(sum(withdrawal_amount)/count(withdrawal_amount ) as decimal (10,2)) as avg_withdrawal_amount
+	, cast(sum(fee_amount)/count(fee_amount ) as decimal (10,2)) as avg_fee_amount_amount	
+from
+	gold.fact_transactions
+group by
+	  DATENAME(year, transaction_date)
+	, DATENAME(month, transaction_date)
+	, MONTH(transaction_date)
+order by 
+	  year
+	, MONTH(transaction_date);
 ```
-![visual](/visual_documentation/charts/employee_positions.png)
-
-
-*Bar chart visualizing total employees per position.This chart was created with Python after importing my SQL query results*
 
 
 ## **3. Rankings:** Top and worst performers across key areas highlighting leaders and trends.
