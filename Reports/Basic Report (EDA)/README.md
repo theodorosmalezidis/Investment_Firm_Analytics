@@ -1,6 +1,6 @@
 # Basic Report (EDA)
 
-![visual](/visual_documentation/png/basic_report.png)
+![visual](/visual_documentation/png/basic_report2.png)
 
 There are three sections in basic report:
 
