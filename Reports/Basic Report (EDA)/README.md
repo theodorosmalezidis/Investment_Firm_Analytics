@@ -223,7 +223,6 @@ from
 | **Least Valuable Withdrawal (lvwt)** | 100.00 |
 | **Avg. Fee per Transaction** | 59.20 |
 
-*Bar chart visualizing total AUM by product type.This chart was created with Python after importing my SQL query results*
 
 **d) Monthly Trends**
 
