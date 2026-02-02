@@ -1,6 +1,6 @@
 <mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/24.7.17 Chrome/128.0.6613.36 Electron/32.0.1 Safari/537.36" version="24.7.17">
   <diagram name="Σελίδα-1" id="kx84PUummJh-ONIuabE0">
-    <mxGraphModel dx="1834" dy="844" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1818" dy="828" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -47,19 +47,19 @@
         <mxCell id="M14kqL5w_x4W9ffPL54g-18" value="" style="html=1;shadow=0;dashed=0;align=center;verticalAlign=middle;shape=mxgraph.arrows2.arrow;dy=0.6;dx=40;notch=0;fillColor=#f8cecc;gradientColor=#EA6B66;strokeColor=#b85450;" parent="1" vertex="1">
           <mxGeometry x="20" y="520" width="100" height="50" as="geometry" />
         </mxCell>
-        <mxCell id="V0dumkVramKhldQUX2lv-5" value="" style="shape=cross;whiteSpace=wrap;html=1;gradientColor=#EA6B66;" vertex="1" parent="1">
+        <mxCell id="V0dumkVramKhldQUX2lv-5" value="" style="shape=cross;whiteSpace=wrap;html=1;gradientColor=#EA6B66;" parent="1" vertex="1">
           <mxGeometry x="370" y="490" width="80" height="80" as="geometry" />
         </mxCell>
-        <mxCell id="V0dumkVramKhldQUX2lv-19" value="" style="shadow=0;dashed=0;html=1;strokeColor=none;fillColor=#4495D1;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;outlineConnect=0;shape=mxgraph.veeam.2d.report;" vertex="1" parent="1">
+        <mxCell id="V0dumkVramKhldQUX2lv-19" value="" style="shadow=0;dashed=0;html=1;strokeColor=none;fillColor=#4495D1;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;outlineConnect=0;shape=mxgraph.veeam.2d.report;" parent="1" vertex="1">
           <mxGeometry x="180" y="477.5" width="110" height="135" as="geometry" />
         </mxCell>
-        <mxCell id="V0dumkVramKhldQUX2lv-22" value="&lt;span style=&quot;font-size: 18px; font-weight: 700;&quot;&gt;ADVANCED REPORT&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+        <mxCell id="V0dumkVramKhldQUX2lv-22" value="&lt;span style=&quot;font-size: 18px; font-weight: 700;&quot;&gt;STRATEGIC BI REPORT&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="467.5" y="417.5" width="235" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="V0dumkVramKhldQUX2lv-23" value="&lt;span style=&quot;font-size: 18px; font-weight: 700;&quot;&gt;BASIC REPORT (EDA)&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+        <mxCell id="V0dumkVramKhldQUX2lv-23" value="&lt;span style=&quot;font-size: 18px; font-weight: 700;&quot;&gt;EDA &amp;amp; BASIC METRICS&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="140" y="430.5" width="210" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="V0dumkVramKhldQUX2lv-25" value="" style="shadow=0;dashed=0;html=1;strokeColor=none;fillColor=#4495D1;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;outlineConnect=0;shape=mxgraph.veeam.2d.report;" vertex="1" parent="1">
+        <mxCell id="V0dumkVramKhldQUX2lv-25" value="" style="shadow=0;dashed=0;html=1;strokeColor=none;fillColor=#4495D1;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;outlineConnect=0;shape=mxgraph.veeam.2d.report;" parent="1" vertex="1">
           <mxGeometry x="530" y="477.5" width="110" height="135" as="geometry" />
         </mxCell>
       </root>

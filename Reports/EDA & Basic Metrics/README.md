@@ -1,6 +1,6 @@
 # Basic Report (EDA)
 
-![visual](/visual_documentation/png/basic_report2.png)
+![visual](/visual_documentation/png/EDA_&_BASIC_METRICS.png)
 
 There are three sections in basic report:
 
@@ -8,9 +8,6 @@ There are three sections in basic report:
 
 
 ```sql
-
-
-
 SELECT metric_name, metric_value
 FROM (
 	SELECT 'Total AUM' AS metric_name, SUM(invested_amount) - SUM(withdrawal_amount) AS metric_value, 1 AS order_column
@@ -75,7 +72,7 @@ Results
 | Total Former Employees Count   | 18               |
 | Total Holdings Count           | 523              |
 
-## **2. Segmentation & Distribution Analysis:** Try to identify patterns in regional performance, product popularity and performance and long-term trends.
+## **2. Segmentation & Distribution Analysis:** Try to identify patterns in regional performance, product popularity and performance, and long-term trends.
 
 **a) Branch Analysis**
 
@@ -83,7 +80,6 @@ Results
 
 
  ```sql
- 
  with clients_per_branch as 
 					 (
 					 select
@@ -149,7 +145,7 @@ order by
 
 **b) Product Type Analysis**
 
-💡 Using first a cte to aggregate by product first, then in main query i aggregate by product type to indentify the contribution of each type to firm' s total AUM and revenue and transactions. 
+💡 Using first a cte to aggregate by product, then in main query i aggregate by product type to indentify the contribution of each type to firm' s total AUM, revenue and transactions. 
 
 ```sql
 --create a cte to aggregate by product
@@ -255,15 +251,11 @@ order by
 
 **a) Holdings**
 
-Provides top and worst perfoming holdings across diferrent dimansions:
-
-By total Investment Value.
-
-By total AUM.
+Provides top and worst perfoming holdings by total AUM.
 
 💡 Shows high and low performing assets and areas needing improvement.
 
-For example:
+
 ```sql
 SELECT *
 FROM(
@@ -292,15 +284,11 @@ ORDER BY
 
 **b) Clients**
 
-Provides top and worst perfoming clients across diferrent dimansions:
-
-By total AUM.
-
-By total Investments Placed.
+Provides top and worst perfoming clients by total transactions.
 
 💡 Shows high and low performing clients to enhance client relationship management.
 
-For example:
+
 ```sql
 SELECT *
 FROM(
@@ -327,11 +315,8 @@ ORDER BY
 
 **c) Employees**
 
-Provides top and worst perfoming employees across diferrent dimansions:
+Provides top and worst perfoming employees by total Portfolios managed.
 
-By total Portfolio managed.
-
-By total Holdings analyzed.
 
 💡 Shows high and low performing employees to support performance evaluations.
 
