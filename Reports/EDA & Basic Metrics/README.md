@@ -2,7 +2,7 @@
 
 ![visual](/visual_documentation/png/EDA_&_BASIC_METRICS.png)
 
-There are three sections in basic report:
+There are three sections in this report:
 
 ## **1. Big Numbers:** Summarizes key metrics, providing a quick overview of business performance.
 
