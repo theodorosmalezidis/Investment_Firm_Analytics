@@ -1,4 +1,4 @@
-# Basic Report (EDA)
+# EDA & BASIC METRICS
 
 ![visual](/visual_documentation/png/EDA_&_BASIC_METRICS.png)
 
