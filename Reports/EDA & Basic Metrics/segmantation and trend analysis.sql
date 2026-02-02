@@ -7,46 +7,48 @@
 
 
 
- with clients_per_branch as
-					 (
-					 select
-						   e.branch
-						 , c.client_key 
-					from
-						gold.fact_employee_client c
-							 left join
-								gold.dim_employees e
-									on e.employee_key=c.employee_key
-					),
-client_totals as
-				(
-				select
-					  client_key
-					, count(transaction_key) as transanctions_per_client
-					, sum(fee_amount) as total_fee_per_client
-					, sum(invested_amount-withdrawal_amount) as AUM_per_client
-				from
-					gold.fact_transactions
-				group by
-					client_key
-				)
+ with clients_per_branch as 
+   				 (
+   				 select
+   					   e.branch
+   					 , c.client_key 
+   				from
+   					gold.fact_employee_client c
+   						 left join
+   							gold.dim_employees e
+   								on e.employee_key=c.employee_key
+   				),
+client_totals as 
+   			(
+   			select
+   				  client_key
+   				, count(transaction_key) as transanctions_per_client
+   				, sum(fee_amount) as total_fee_per_client
+   				, sum(invested_amount-withdrawal_amount) as Net_Flows_per_client
+   			from
+   				gold.fact_transactions
+   			group by
+   				client_key
+   			)
 select
-	  b.branch
-	, count(distinct b.client_key) as branch_clients
-	, sum(c.transanctions_per_client) as branch_transactions
-	, sum(c.total_fee_per_client) as total_fees
-	, sum(c.AUM_per_client) as total_AUM
-	, cast((count(distinct b.client_key)*100.0)/sum(count(distinct b.client_key)) over() as decimal(10,2)) as perc_of_total_clients
-	, cast((sum(c.transanctions_per_client)*100.0)/sum(sum(c.transanctions_per_client)) over() as decimal(10,2)) as perc_of_total_transactions
-	, cast((sum(c.total_fee_per_client)*100.0)/sum(sum(c.total_fee_per_client)) over() as decimal(10,2)) as perc_of_total_fees
-	, cast((sum(c.AUM_per_client)*100.0)/sum(sum(c.AUM_per_client)) over() as decimal(10,2)) as perc_of_total_AUM
+     b.branch
+   , count(distinct b.client_key) as branch_clients
+   , sum(c.transanctions_per_client) as branch_transactions
+   , sum(c.total_fee_per_client) as total_fees
+   , sum(c.Net_Flows_per_client) as total_Net_Flows
+   , cast((count(distinct b.client_key)*100.0)/sum(count(distinct b.client_key)) over() as decimal(10,2)) as perc_of_total_clients
+   , cast((sum(c.transanctions_per_client)*100.0)/sum(sum(c.transanctions_per_client)) over() as decimal(10,2)) as perc_of_total_transactions
+   , cast((sum(c.total_fee_per_client)*100.0)/sum(sum(c.total_fee_per_client)) over() as decimal(10,2)) as perc_of_total_fees
+   , cast((sum(c.Net_Flows_per_client)*100.0)/sum(sum(c.Net_Flows_per_client)) over() as decimal(10,2)) as perc_of_total_Net_Flows
 from
-	clients_per_branch b
-		left join
-			client_totals c
-				on b.client_key=c.client_key 
+   clients_per_branch b
+   	left join
+   		client_totals c
+   			on b.client_key=c.client_key 
 group by
-	branch;
+   branch
+order by
+   total_Net_Flows desc
 
 
 
@@ -59,7 +61,7 @@ with product_type_totals as
 							select
 								p.product_type,
 								p.product_key,
-								isnull(sum(t.invested_amount)-sum(t.withdrawal_amount), 0) as product_AUM,
+								isnull(sum(t.invested_amount)-sum(t.withdrawal_amount), 0) as product_Net_Flows,--in USD
 								isnull(sum(t.fee_amount), 0) as product_fees,
 								count(t.transaction_key) as product_transactions
 							from
@@ -75,10 +77,10 @@ with product_type_totals as
 select														-- and the aggregate by product type in main query
 	product_type,
 	sum(product_transactions) as total_transactions,
-	sum(product_AUM) as total_aum,--in USD
+	sum(product_Net_Flows) as total_aum,--in USD
 	sum(product_fees) as total_fees,--in USD
 	cast(sum(product_transactions)*100.0/sum(sum(product_transactions)) over() as decimal(10,2)) as perc_of_total_transactions,--window function helps find perc of each product type s nr. of transactions in firm s total
-	cast(sum(product_AUM)*100.0/sum(sum(product_AUM)) over() as decimal(10,2)) as perc_of_total_AUM,--window function helps find perc of each product type s total AUM in firm s total
+	cast(sum(product_Net_Flows)*100.0/sum(sum(product_Net_Flows)) over() as decimal(10,2)) as perc_of_total_Net_Flows,--window function helps find perc of each product type s total AUM in firm s total
 	cast(sum(product_fees)*100.0/sum(sum(product_fees)) over() as decimal(10,2)) as perc_of_total_fees--window function helps find perc of each product type s total fees in firm s total
 from		
 	product_type_totals
@@ -109,7 +111,7 @@ select
 	  datename(year, transaction_date) as year
     , datename(month, transaction_date) as month
     , count(transaction_key) AS monthly_transactions
-	, sum(invested_amount)-sum(withdrawal_amount) as monthly_AUM
+	, sum(invested_amount)-sum(withdrawal_amount) as monthly_Net_Flows
 	, sum(fee_amount) as monthly_fees
 	, cast(sum(invested_amount)/count(invested_amount ) as decimal (10,2)) as avg_invested_amount
 	, cast(sum(withdrawal_amount)/count(withdrawal_amount ) as decimal (10,2)) as avg_withdrawal_amount

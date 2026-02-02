@@ -1,14 +1,14 @@
 
-# B) Advanced Report 
+# B) Strategic BI Report
 
 ![visual](/visual_documentation/png/advanced_report.png)
 
 
 This report is structured into five key sections , each of which I analyzed to provide comprehensive insights.
 
-## 1. AUM Performance Over Time
+## 1. Net Flows Performance Over Time
 
-Here i calculate:
+To have a clear view of the organic growth of firm i calculated the Net Flow , and the YoY change(%), to compare each quarter against the equivalent period of the previous year, i isolate seasonality noise. 
 
 a) Year-over-Year (YoY) Change in AUM
 
