@@ -8,141 +8,103 @@ This report is structured into five key sections , each of which I analyzed to p
 
 ## 1. Net Flows Performance Over Time
 
-To have a clear view of the organic growth of firm i calculated the Net Flow , and the YoY change(%), to compare each quarter against the equivalent period of the previous year, i isolate seasonality noise. 
+To provide a clear view of the organic growth of the firm, i calculated the quartely Net Flow , and the YoY change(%). Comparing each quarter against the equivalent period of the previous year, i isolated seasonality noise revealing the true growth of new capital. 
 
-a) Year-over-Year (YoY) Change in AUM
-
-b) Quarter-over-Quarter (QoQ) Change in AUM
-
-c) Year-over-Year (YoY) % Change in Cumulative AUM
-
-d) Quarter-over-Quarter (QoQ) % Change in Cumulative AUM
-
-- **Purpose:** Tracks how the total Assets Under Management (AUM) grow or shrink over the years and quarters, giving a good sense of the firm’s financial progress.
-
-- **Insight:** Shows how AUM is changing by comparing it to previous years and quarters. Both the actual changes and the percentage differences help spot whether growth is speeding up, slowing down, or staying steady.
-
-- **Value:** Helps firms see the bigger picture and make smart decisions—like adjusting strategies or fine-tuning investment options—to keep AUM growing in the right direction.
-
-I wiil showcase two of them.
-
-### (YoY) Change in AUM:
 
 ```sql
-WITH YearlyAUM AS (
-    SELECT 
-        YEAR(transaction_date) AS fiscal_year,
-        SUM(CAST(invested_amount AS DECIMAL(20, 2))) - SUM(CAST(withdrawal_amount AS DECIMAL(20, 2))) AS yearly_aum
-    FROM gold.fact_transactions
-    WHERE transaction_date IS NOT NULL
-    GROUP BY 
-        YEAR(transaction_date)
-),
-PrevYearlyAUM AS(
-	SELECT *,
-		LAG(yearly_aum) OVER(ORDER BY fiscal_year) AS prev_yearly_aum
-	FROM
-		YearlyAUM
-)
+WITH QuarterlyNF AS -- cte to calculate quarterly Net Flows
+					(
+						SELECT 
+							YEAR(transaction_date) AS fiscal_year,
+							DATEPART(QUARTER, transaction_date) AS fiscal_quarter,
+							CAST(SUM(invested_amount) - SUM(withdrawal_amount) AS DECIMAL(20, 2)) AS quarterly_nf
+						FROM gold.fact_transactions
+						WHERE transaction_date IS NOT NULL
+						GROUP BY 
+							YEAR(transaction_date),
+							DATEPART(QUARTER, transaction_date)
+					),
+PrevQuarterlyNF AS -- cte to get previous year's same quarter Net Flows
+					(
+						SELECT *,
+							LAG(quarterly_nf, 4) OVER(ORDER BY fiscal_year,fiscal_quarter) AS same_q_previous_y
+						FROM
+							QuarterlyNF
+					)
 SELECT
 	fiscal_year,
-	yearly_aum,
-	prev_yearly_aum,
-	CAST(ROUND(((yearly_aum/prev_yearly_aum)-1)*100, 2) AS DECIMAL (18,2)) AS yoy_perc
+	fiscal_quarter,
+	quarterly_nf,
+	same_q_previous_y,
+	CAST(ROUND(((quarterly_nf/NULLIF(same_q_previous_y, 0))-1)*100, 2) AS DECIMAL (18,2)) AS yoy_perc -- added NULLIF to avoid division by zero, calculating YoY percentage change
 FROM
-	PrevYearlyAUM
+	PrevQuarterlyNF
 ORDER BY
-		fiscal_year;
+		fiscal_year,
+		fiscal_quarter;
 ```        
 
-![visual](/visual_documentation/charts/yearly_aum_and_yoy_changes.png)
+![visual](/visual_documentation/charts/net_flows_over_time.png)
 
-*Bar chart visualizing YoY AUM change.This visualization was created with Python after importing my SQL query results*
+*Bar chart visualizing Quartely Net Flow and YoY change(%).This visualization was created with Python after importing my SQL query results*
 
 Key Findings (keep in mind data is current up to March 2025):
 
 
-- Yearly AUM peaked in 2021  at $204.7M  but has shown a declining trend in subsequent years, with 2024  recording $177.3M.
+- **Aggressive start:** Strong start in the first year of the firm suggesting a successful "launch" or a major marketing campaign that quintupled the net flow in a single quarter(Q1 2020 ($11M) to Q2 2020 ($54.1M)).
 
-- The largest YoY decline in a full year occurred between 2022 and 2023 , with a drop of -5.53%.
+- **Stabilization phase:** Looking at the YoY Change (%) line after 2021, the percentages hover from the 6.1 % to -12% range, signaling an early begining of stabilization phase with new capital in the range of 45M to 50M (instead of sustained growth phase) but with a slightly deceleration in growth of new capital.
 
-- For 2025 , the AUM is reported as $31.0M , but this reflects only the first three months of the year (up to March 2025). Therefore, the -82.50% YoY change  is not valid for comparison with full-year data from prior years.
+- **Major red flag:** A significant decrease in first quarter of 2025 almost 27% YoY, signals a major red flag, and since this analysis isolates seasonality we have to ask where this decrease is coming from, is the firm losing some major institutional clients or there has been a spike in withdrawals?
 
-- Despite early growth (+18.22% in 2021), the overall trend indicates consistent annual declines from 2022 onward, signaling potential challenges in maintaining or growing assets.
-     
-### (QoQ) % Change in Cumulative AUM
+
+## 2. Fees Performance Over Time
+
+Here we swift the focus from Capital Volume to Revenue, in the previous query i analyzed the 'Stream' of capital flow now i am passing to the 'Monetization' of that capital. By calculating YoY Fee Change (%), I can determine if our revenue is driven by a few high-fee transactions or a consistent volume of smaller ones. I hope taht this will help clarify  if the 2025 'Red Flag' is caused by either a total halt in client activity or a drastic reduction in number of active clients  or simply a shift toward lower-fee products.
 
 ```sql
-With QuarterlyAUM AS(
-	SELECT
-		YEAR(transaction_date) AS fiscal_year,
-		DATEPART(QUARTER, transaction_date) AS fiscal_quarter,
-		SUM(CAST(invested_amount AS DECIMAL (18, 2))) - SUM(CAST(withdrawal_amount AS DECIMAL (18, 2))) AS quarterly_aum
-	FROM
-		gold.fact_transactions
-	WHERE
-		transaction_date IS NOT NULL
-	GROUP BY
-		YEAR(transaction_date) ,
-		DATEPART(QUARTER, transaction_date)
+WITH QuarterlyRevenue AS (
+    SELECT 
+        YEAR(transaction_date) AS fiscal_year,
+        DATEPART(QUARTER, transaction_date) AS fiscal_quarter,
+        CAST(SUM(fee_amount) AS DECIMAL(20, 2)) AS quarterly_revenue
+    FROM gold.fact_transactions
+    WHERE transaction_date IS NOT NULL
+    GROUP BY 
+        YEAR(transaction_date),
+        DATEPART(QUARTER, transaction_date)
 ),
-CulumativeAUM AS(
-	SELECT
-		fiscal_year,
-		fiscal_quarter,
-		quarterly_aum,
-		SUM(quarterly_aum) OVER(ORDER BY fiscal_year,fiscal_quarter) AS culumative_aum
-	FROM
-		QuarterlyAUM
-),
-PrevCulumativeAUM AS(
+PrevQuarterlyRevenue AS(
 	SELECT *,
-		LAG(culumative_aum) OVER(ORDER BY fiscal_year,fiscal_quarter) AS prev_culumative_aum
+		LAG(quarterly_revenue, 4) OVER(ORDER BY fiscal_year,fiscal_quarter) AS same_q_previous_y
 	FROM
-		CulumativeAUM
+		QuarterlyRevenue
 )
 SELECT
 	fiscal_year,
 	fiscal_quarter,
-	quarterly_aum,
-	culumative_aum,
-	prev_culumative_aum,
-	CAST(ROUND(((culumative_aum/prev_culumative_aum)-1)*100, 2) AS DECIMAL (18,2)) AS qoq_perc
+	quarterly_revenue,
+	same_q_previous_y,
+	CAST(ROUND(((quarterly_revenue/NULLIF(same_q_previous_y, 0))-1)*100, 2) AS DECIMAL (18,2)) AS yoy_perc
 FROM
-	PrevCulumativeAUM
+	PrevQuarterlyRevenue
 ORDER BY
 		fiscal_year,
 		fiscal_quarter;
 ```
-![visual](/visual_documentation/charts/aum_cumulative_qoq.png)
+![visual](/visual_documentation/charts/fees_over_time.png)
 
-*Bar chart visualizing QoQ Cumulative AUM change.This visualization was created with Python after importing my SQL query results*
+*Bar chart visualizing Quartely Revenue(fees) and YoY change(%).This visualization was created with Python after importing my SQL query results*
 
 Key Findings:
 
-1. Strong Initial Growth (2020):
+Comparing the two charts, something stands out very clearly: **The firm’s revenue is a "Mirror Metric" of its capital volume.** 
 
-- The first quarter of 2020 started with a relatively low AUM of $10.98M , but the cumulative AUM grew significantly by 492.75% QoQ  in Q2 2020, driven by a substantial quarterly AUM of $54.10M.
+That proves that the firm's monetization model is transaction-heavy. This is a problem for two reasons. First the firm isn't "making money while it sleeps" on the assets it already holds and second the risk of clients stop moving money (even if they don't leave), where the revenue vanishes. 
 
-2. Stabilization Begins (2021–2022):
+Here comes my recommentation of a **Recurring Revenue Model** through Assets Under Management (AUM) fees. that the firm has to establish and create a more predictable revenue stream of manage fees.
 
-- From 2021 onward, the QoQ growth gradually declines each quarter — from ~31% in 2021 Q1 to ~9% by end of 2022.
-
-- This suggests the firm was entering a more mature and stable growth phase after its rapid start.
-
-3. Plateauing Trend (2023–2025):
-
-- The growth rate continues to decline quarter by quarter, reaching just 3.31% in 2025 Q1.
-
-- Cumulative AUM is still increasing, but at a slower pace, hinting at market saturation, fewer new large clients, or limited expansion opportunities.
- 
- Interpretation:
-
-- Initial Surge indicates aggressive onboarding, possibly new product launches or market entry.
-
-- Slowing Growth is not necessarily negative — it can reflect stability and consolidation after rapid expansion.
-
-- However, continuous decline in QoQ growth could signal a need to reassess strategy, innovate offerings, or target new markets to maintain momentum.
+This way the firm will establish and create a more predictable revenue stream of manage fees.
      
 ## 2. Annual Client Retention Rate
 
