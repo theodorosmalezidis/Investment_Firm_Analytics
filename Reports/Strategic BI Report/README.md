@@ -60,7 +60,7 @@ Key Findings (keep in mind data is current up to March 2025):
 
 ## 2. Fees Performance Over Time
 
-Here we swift the focus from Capital Volume to Revenue, in the previous query i analyzed the 'Stream' of capital flow now i am passing to the 'Monetization' of that capital. By calculating YoY Fee Change (%), I can determine if our revenue is driven by a few high-fee transactions or a consistent volume of smaller ones. I hope taht this will help clarify  if the 2025 'Red Flag' is caused by either a total halt in client activity or a drastic reduction in number of active clients  or simply a shift toward lower-fee products.
+Here we swift the focus from Capital Volume to Revenue, in the previous query i analyzed the 'Stream' of capital flow now i am passing to the 'Monetization' of that capital. By calculating YoY Fee Change (%), i can determine if our revenue is driven by a few high-fee transactions or a consistent volume of smaller ones. I hope that this will help clarify  if the 2025 'Red Flag' is caused by either a total halt in client activity, a drastic reduction in number of active clients  or simply a shift toward lower-fee products.
 
 ```sql
 WITH QuarterlyRevenue AS (
@@ -102,119 +102,86 @@ Comparing the two charts, something stands out very clearly: **The firm’s reve
 
 That proves that the firm's monetization model is transaction-heavy. This is a problem for two reasons. First the firm isn't "making money while it sleeps" on the assets it already holds and second the risk of clients stop moving money (even if they don't leave), where the revenue vanishes. 
 
-Here comes my recommentation of a **Recurring Revenue Model** through Assets Under Management (AUM) fees. that the firm has to establish and create a more predictable revenue stream of manage fees.
+Here comes my recommentation of a **Recurring Revenue Model** through Assets Under Management (AUM) fees. that the firm has to establish and create a more predictable revenue stream of management fees.
 
-This way the firm will establish and create a more predictable revenue stream of manage fees.
+This way the firm will create and add to the existing 'transaction fee' revenue stream a more predictable one of management fees.
      
-## 2. Annual Client Retention Rate
+## 3. Cumulative Client Retention Rate
 
-- **Purpose:** The retention rate shows the percentage of clients from each cohort year (based on join date) who remained active at the end of the following year. A high rate indicates strong short-term retention, while a low rate signals early churn among newly acquired clients.
 
-- **Insight:** Measures how well the firm retains clients after one full year of onboarding. This highlights differences in early client engagement across years, helping identify which cohorts had stronger or weaker retention outcomes.  
+My purpose here is to find the Retention Rate not in a cohort view but for the 
+total cumulative base of clients. I want to measure loyalty-specifically, how many total clients 
+remain with the company year-over-year for two reasons:
 
-- **Value:** Enables the firm to evaluate the effectiveness of client onboarding and early relationship management. By tracking one-year retention across cohorts, the firm can refine marketing, onboarding, and service strategies to improve long-term client value.
+1. To determine if the significant decrease of capital flow and revenue in Q1 of 
+2025 is a result of a big churn crisis(losing clients) or inactivity(clients are staying but not transacting).
 
-First, I calculate the number of clients who joined in each year using the JoinedClients CTE. Then, in the RetainedNextYear CTE, I count how many of those clients were still active at the end of the following calendar year. These two datasets are aligned by cohort year using a LEFT JOIN, and the retention rate is computed as the percentage of retained clients relative to those who joined. The final query includes a year-over-year (YoY) difference to assess whether retention improved or declined compared to the previous cohort year, with results displayed in chronological order.
+2. Depending on the findings, to validate if a new stream of recurring 
+revenue (management fees) can have an impact on the firm's financials or more drastic measures have to be taken to address client loss.
+
+So i came up with this formula, (E-N)/S where:
+E = total clients in the end of year
+N = total new clients for that year
+S= total clients in the start of the year.
 
 ```sql
-WITH JoinedClients AS (
-    SELECT
-        YEAR(create_date) AS cohort_year,
-        COUNT(client_key) AS total_joined
-    FROM
-        gold.dim_clients
-    WHERE
-        create_date IS NOT NULL
-    GROUP BY
-        YEAR(create_date)
-),
-RetainedNextYear AS (
-    SELECT
-        YEAR(create_date) AS cohort_year,
-        COUNT(client_key) AS total_retained_next_year
-    FROM
-        gold.dim_clients
-    WHERE
-        create_date IS NOT NULL
-        AND (
-            closure_date IS NULL
-            OR closure_date > DATEFROMPARTS(YEAR(create_date) + 1, 12, 31)
-        )
-    GROUP BY
-        YEAR(create_date)
-),
-RetentionRates AS (
-    SELECT
-        j.cohort_year,
-        j.total_joined,
-        COALESCE(r.total_retained_next_year, 0) AS total_retained_next_year,
-        CAST(
-            ROUND(
-                (COALESCE(r.total_retained_next_year, 0) * 100.0) / j.total_joined,
-                2
-            ) AS DECIMAL(5, 2)
-        ) AS retention_rate
-    FROM
-        JoinedClients j
-        LEFT JOIN RetainedNextYear r ON j.cohort_year = r.cohort_year
-)
-SELECT
-    cohort_year,
-    total_joined,
-    total_retained_next_year,
-    retention_rate,
-    CAST(
-        ROUND(
-            retention_rate - LAG(retention_rate) OVER (ORDER BY cohort_year),
-            2
-        ) AS DECIMAL(5, 2)
-    ) AS yoy_retention_diff
-FROM
-    RetentionRates
-ORDER BY
-    cohort_year;
-
-
+-- I'll use a CTE to define the client metrics for each fiscal year
+with YearlyCounting as
+					(select
+						 year(create_date) as fiscal_year,
+						 -- calculate the total count of clients at the start of the year
+						 (select
+								count(client_key)
+							from
+								gold.dim_clients
+							where
+								create_date<DATEFROMPARTS(year(c.create_date), 1, 1)
+									and (closure_date is null or closure_date>=DATEFROMPARTS(year(create_date), 1, 1))
+						) as start_of_year_count,
+						-- calculate all the new client acquisitions during the year
+						 count(client_key) as new_clients_count,
+						 -- calculate the total count of clients at the end of the year
+						 (select
+								count(client_key)
+							from
+								gold.dim_clients 
+							where
+								create_date<=DATEFROMPARTS(year(c.create_date), 12, 31)
+									and (closure_date is null or closure_date>DATEFROMPARTS(year(create_date), 12, 31))
+						) as end_of_year_count
+					from
+						gold.dim_clients c
+					group by
+						year(create_date)
+				 )
+select
+	fiscal_year,
+	start_of_year_count,
+	new_clients_count,
+	end_of_year_count,
+	-- calculate the retention rate by the formula (E-N)*100/S
+	-- This isolates existing client loyalty by removing the impact of new sign-ups.
+	round(cast((end_of_year_count-new_clients_count)*100.0/nullif (start_of_year_count, 0) as decimal (5,2)), 2) as cumulative_retention_rate
+from
+	YearlyCounting
+where
+	start_of_year_count>0
+order by
+	fiscal_year
 ```
 
-![visual](/visual_documentation/charts/retention_rate_yoy_difference.png)
+![visual](/visual_documentation/charts/cumulative_ret_rate.png)
 
-*Bar chart visualizing annual client retention rate.This visualization was created with Python after importing my SQL query results*
+*Bar chart visualizing Cumulative Client Retention Rate.This visualization was created with Python after importing my SQL query results*
 
-For reference: 
+Key findings: 
 
-Excellent Retention (90%–100%)
+- Acquisition of new clients is steady and predictable (projecting ~2,000 new clients for 2025), meaning the company is healthy and growing and propably elemonating any "bad marketing" as a root cause for the revenue drop.
 
-Good Retention (80%–89.99%)
+- Cumulative Retention Rate showing a very strong and loyal client base, showing a continious growth and currently at all tme high at 97,57%.
 
-Moderate Retention (70%–79.99%)
+- Analysis reveals a clear "disconnection" between the growing client base and the decrease in capital flow and revenue especially in Q1 of 2025 indicating that the problem is the inactivity(clients are staying but not transacting) and that a new recurring revenue of Management Fee to monetize the nearly 10,000 loyal clients who are staying with the firm will be crucial to company's Total Sales.
 
-Fair Retention (60%–69.99%)
-
-Poor Retention (Below 60%)
-
-Key Findings : 
-
-- All cohort years fall within the “Excellent” retention range (90%–100%), showing consistently strong short-term client loyalty.
-- Retention rates declined slightly from 2020 to 2023, hitting a low of 91.30% in 2023 (still excellent, but downward trend).
-- 2024 rebounded with a strong YoY improvement of +1.22%, the only positive change.
-- 2025 dropped again by -1.46%, the sharpest YoY decline in the series.
-
-Concerns :
-
-- Despite being in the “Excellent” category, the trend is inconsistent — 3 consecutive years of decline, a rebound, followed by another dip.
-
-- The drop in 2025, even if retention is still high, may indicate emerging issues in early client engagement or onboarding.
-
-- If this downward pressure continues, future cohorts could slip into the Good (80%–89.99%) zone, which would signal a clear deterioration in retention performance.
-
-Recommended Actions :
-
-- Review client onboarding processes in the last two years to identify what improved retention in 2024 and what possibly failed in 2025.
-
-- Identify what worked in the 2024 cohort (e.g., specific campaigns, advisors, product mixes) and integrate those practices into the 2025+ onboarding flow.
-
-- Gather structured feedback from both retained and churned clients in each cohort to understand their behavior and actions.
      
 ## 3. Client Portfolio Diversification & Risk Assessment
 
