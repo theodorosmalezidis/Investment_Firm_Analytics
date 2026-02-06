@@ -176,7 +176,7 @@ order by
 
 Key findings: 
 
-- Acquisition of new clients is steady and predictable (projecting ~2,000 new clients for 2025), meaning the company is healthy and growing and propably elemonating any "bad marketing" as a root cause for the revenue drop.
+- Acquisition of new clients is steady and predictable (projecting ~2,000 new clients for 2025), meaning the company is healthy and growing and propably eliminating any "bad marketing" as a root cause for the revenue drop.
 
 - Cumulative Retention Rate showing a very strong and loyal client base, showing a continious growth and currently at all tme high at 97,57%.
 
