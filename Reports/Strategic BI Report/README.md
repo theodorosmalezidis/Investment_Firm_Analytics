@@ -4,7 +4,7 @@
 ![visual](/visual_documentation/png/strategic_bi_report.png)
 
 
-This report is structured into five key sections , each of which I analyzed to provide comprehensive insights.
+This report is structured into five specialized modules designed to assess the firm's growth trajectory and employee performance so far, to identify growth opportunities and quantify the risk concentration across the client portfolio.
 
 ## 1. Net Flows Performance Over Time
 
