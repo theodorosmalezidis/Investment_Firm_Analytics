@@ -183,6 +183,101 @@ Key findings:
 - Analysis reveals a clear "disconnection" between the growing client base and the decrease in capital flow and revenue especially in Q1 of 2025 indicating that the problem is the inactivity(clients are staying but not transacting) and that a new recurring revenue of Management Fee to monetize the nearly 10,000 loyal clients who are staying with the firm will be crucial to company's Total Sales.
 
      
+
+
+## 4. Employee Performance & Efficiency 
+
+
+As i stated, one of the stakeholders problems is that they couldn't quantify their employee’s productivity, efficiency and perfomance. So i constructed a 'tool' for that exact purpose. I created a temp table to evaluate the performance of employees in client management and their efficiency, by using four key metrics as benchmarks. These metrics are:
+1.	Number of clients handled
+2.	Average client duration (tenure with the company, loyalty)
+3.	Average portfolio net flow per client(new capital capture)
+4.	Total Net Flow (TNF, measures the advisor's total impact) 
+
+
+ Each employee's metrics are compared against company-wide averages, so we can distinguish between advisors who are simply 'sitting on' old accounts and those who are actively driving Net New Assets. It allows leadership to identify 'High-Efficiency' managers who maintain long-term client loyalty (Tenure) while consistently capturing a higher-than-average share of the client's wallet (Net Flow).
+
+ By storing these results as a temp table, allows any bi analyst to perform instant analysis—such as ranking top performers in any of the metrics included.
+
+
+
+### Query Overview: 
+
+- Step 1: Calculate Total Net Flow per Client. 
+
+- Step 2: Aggregate everything at the Employee level FIRST.
+         
+- Step 3: Calculate Firm Averages as Bencmarks.
+
+- Step 4: Final query where i join Employee Stats with Firm Bennchmarks
+
+- Step 5: Create the temp table
+  
+```sql
+-- Step 1: Calculate Total Net Flow per Client
+with ClientNetFlow as 
+					(select           
+						client_key,
+						sum(invested_amount) - sum(withdrawal_amount) as total_client_net_flow
+					from
+						gold.fact_transactions
+					group by
+						client_key
+					),
+-- Step 2: Aggregate everything at the Employee level FIRST
+EmployeeMetrics as 
+				(select
+					e.employee_full_name,
+					count(distinct c.client_key) as clientscount,
+					cast(avg(datediff(day, c.create_date, coalesce(c.closure_date, getdate())) * 1.0) as decimal(18, 2)) as avg_days,        
+					avg(p.total_client_net_flow) as avg_net_flow_per_client,
+					sum(p.total_client_net_flow) as total_employee_net_flow
+				from gold.dim_employees e
+					left join gold.fact_employee_client f 
+					on e.employee_key = f.employee_key
+						left join gold.dim_clients c 
+						on f.client_key = c.client_key
+							left join ClientNetFlow p 
+							on c.client_key = p.client_key
+				where
+					c.create_date IS NOT NULL
+				group by
+					e.employee_full_name
+			    ),
+
+-- Step 3: Calculate Firm Averages as Benchmarks
+FirmMetrics as
+				(select
+					cast(avg(clientscount * 1.0) as decimal(18,2)) as avg_clientscount_overall,
+					cast(avg(avg_days) as decimal(18,2)) as avg_days_overall,
+					cast(avg(avg_net_flow_per_client) as decimal(18,2)) as avg_net_flow_overall,
+					cast(avg(total_employee_net_flow) as decimal(18,2)) as avg_total_flow_overall
+				from
+					EmployeeMetrics
+				)
+
+-- Final Selection: Joining Employee Stats with Firm Benchmarks
+SELECT
+    e.employee_full_name,
+    e.clientscount,
+    f.avg_clientscount_overall,
+    ROUND(e.avg_days, 2) AS avg_days,
+    f.avg_days_overall,
+    ROUND(e.avg_net_flow_per_client, 2) AS avg_net_flow_per_client,
+    f.avg_net_flow_overall,
+    ROUND(e.total_employee_net_flow, 2) AS total_net_flow,
+    f.avg_total_flow_overall
+into
+	#FinalEmployeeTool -- 'select into' store it as temp table for instant bi analysis
+from 
+	EmployeeMetrics e
+cross join
+	FirmMetrics f
+order by
+	e.avg_days desc;
+```
+
+
 ## 3. Client Portfolio Diversification & Risk Assessment
 
 This query was designed as a Client Portfolio Diversification & Risk Assessment Tool.
@@ -415,238 +510,3 @@ Resullts:
 ![visual](/visual_documentation/charts/client_risk_distribution_with_numbers.png)
 
 *Bar chart visualizing client risk distribution across branches. This visualization was created with Python after importing my SQL query results*
-
-
-## 4. Employee Efficiency in Client Management
-
-- **Purpose:** This query serves as a tool to evaluate and support the performance of employees in client management by using four key metrics as benchmarks. These metrics include:
-1.	Number of clients handled
-2.	Average client duration (tenure with the company)
-3.	Average portfolio net value per client
-4.	Total assets under management (AUM)
-
-- **Insights:**  Each employee's metrics are compared against company-wide averages,allowing for easy identification of top performers.
-
-- **Value:** Data-driven workforce development by uncovering employee strengths and areas for growth in client engagement and portfolio oversight.
-
-### Query Overview: 
-
-- ClientNetPortfolio CTE : Calculates the net portfolio value for each client. 
-
-- OverallAverages CTE : Calculates organization-wide benchmarks by averaging key metrics across all employees using a subquery to first compute the average benchmark per employee.
-         
-- Final SELECT : Retrieves individual employee performance metrics and compares them against the overall benchmarks. 
-  
-```sql
-WITH ClientNetPortfolio AS (
-		   SELECT	        
-				client_key,
-		        SUM(invested_amount) - SUM(withdrawal_amount) AS portfolio_net_value
-		    FROM gold.fact_transactions
-		    GROUP BY client_key
-		),
-		OverallAverages AS (
-		    SELECT
-		        CAST(ROUND(AVG(client_count * 1.0), 2) AS DECIMAL (18, 2))  AS avg_clientscount_overall,
-		        CAST(ROUND(AVG(avg_days * 1.0), 2) AS DECIMAL (18, 2)) AS avg_days_overall,
-		        CAST(ROUND(AVG(avg_portfolio_net_value * 1.0), 2) AS DECIMAL (18, 2)) AS avg_net_value_overall,
-				CAST(ROUND(AVG(total_aum * 1.0), 2) AS DECIMAL (18, 2)) AS avg_total_aum
-
-		    FROM (
-		        SELECT
-		            f.employee_key,
-		            COUNT(DISTINCT f.client_key) AS client_count,
-		            AVG(DATEDIFF(DAY, c.create_date, COALESCE(c.closure_date, GETDATE()))) AS avg_days,
-		            AVG(p.portfolio_net_value) AS avg_portfolio_net_value,
-					SUM(portfolio_net_value) AS total_aum
-		        FROM gold.fact_employee_client f
-		        LEFT JOIN gold.dim_clients c ON f.client_key = c.client_key
-		        LEFT JOIN ClientNetPortfolio p ON c.client_key = p.client_key
-		        WHERE c.create_date IS NOT NULL
-		        GROUP BY f.employee_key
-		    ) AS per_employee
-		)
-		SELECT
-		    e.employee_full_name,
-		    COUNT(DISTINCT c.client_key) AS clientscount,
-			a.avg_clientscount_overall,
-		    AVG(DATEDIFF(DAY, c.create_date, COALESCE(c.closure_date, GETDATE()))) AS avg_days,
-			 a.avg_days_overall,
-		    AVG(p.portfolio_net_value) AS avg_portfolio_net_value,
-			 a.avg_net_value_overall,
-		    SUM(portfolio_net_value) as total_aum,
-			 a.avg_total_aum
-		    -- These are the reference benchmarks
-FROM gold.dim_employees e
-		LEFT JOIN gold.fact_employee_client f ON e.employee_key = f.employee_key
-		LEFT JOIN gold.dim_clients c ON f.client_key = c.client_key
-		LEFT JOIN ClientNetPortfolio p ON c.client_key = p.client_key
-		CROSS JOIN OverallAverages a  -- This brings the overall averages into each row
-WHERE 
-	c.create_date IS NOT NULL
-GROUP BY 
-	e.employee_full_name, a.avg_clientscount_overall, a.avg_days_overall, a.avg_net_value_overall,a.avg_total_aum
-ORDER BY 
-	avg_days DESC;
-```
-
-To identify top performers (employees whose averages exceed company-wide averages across all key metrics):
-
-```sql
-WITH ClientNetPortfolio AS (
-		   SELECT	        
-				client_key,
-		        SUM(invested_amount) - SUM(withdrawal_amount) AS portfolio_net_value
-		    FROM gold.fact_transactions
-		    GROUP BY client_key
-		),
-		OverallAverages AS (
-		    SELECT
-		        CAST(ROUND(AVG(client_count * 1.0), 2) AS DECIMAL (18, 2))  AS avg_clientscount_overall,
-		        CAST(ROUND(AVG(avg_days * 1.0), 2) AS DECIMAL (18, 2)) AS avg_days_overall,
-		        CAST(ROUND(AVG(avg_portfolio_net_value * 1.0), 2) AS DECIMAL (18, 2)) AS avg_net_value_overall,
-				CAST(ROUND(AVG(total_aum * 1.0), 2) AS DECIMAL (18, 2)) AS avg_total_aum
-
-		    FROM (
-		        SELECT
-		            f.employee_key,
-		            COUNT(DISTINCT f.client_key) AS client_count,
-		            AVG(DATEDIFF(DAY, c.create_date, COALESCE(c.closure_date, GETDATE()))) AS avg_days,
-		            AVG(p.portfolio_net_value) AS avg_portfolio_net_value,
-					SUM(portfolio_net_value) AS total_aum
-		        FROM gold.fact_employee_client f
-		        LEFT JOIN gold.dim_clients c ON f.client_key = c.client_key
-		        LEFT JOIN ClientNetPortfolio p ON c.client_key = p.client_key
-		        WHERE c.create_date IS NOT NULL
-		        GROUP BY f.employee_key
-		    ) AS per_employee
-		),Final AS(
-		SELECT
-		    e.employee_full_name,
-		    COUNT(DISTINCT c.client_key) AS clientscount,
-			a.avg_clientscount_overall,
-		    AVG(DATEDIFF(DAY, c.create_date, COALESCE(c.closure_date, GETDATE()))) AS avg_days,
-			 a.avg_days_overall,
-		    AVG(p.portfolio_net_value) AS avg_portfolio_net_value,
-			 a.avg_net_value_overall,
-		    SUM(portfolio_net_value) as total_aum,
-			 a.avg_total_aum
-		    -- These are the reference benchmarks
-FROM gold.dim_employees e
-		LEFT JOIN gold.fact_employee_client f ON e.employee_key = f.employee_key
-		LEFT JOIN gold.dim_clients c ON f.client_key = c.client_key
-		LEFT JOIN ClientNetPortfolio p ON c.client_key = p.client_key
-		CROSS JOIN OverallAverages a  -- This brings the overall averages into each row
-WHERE 
-	c.create_date IS NOT NULL
-GROUP BY 
-	e.employee_full_name, a.avg_clientscount_overall, a.avg_days_overall, a.avg_net_value_overall,a.avg_total_aum
-)
-SELECT
-	employee_full_name,
-	clientscount,
-	avg_clientscount_overall,
-	avg_days,
-	avg_days_overall,
-	avg_portfolio_net_value,
-	avg_net_value_overall,
-	total_aum,
-	avg_total_aum
-From 
-	Final
-WHERE
-	clientscount>avg_clientscount_overall AND avg_days>avg_days_overall AND avg_portfolio_net_value>avg_net_value_overall AND total_aum>avg_total_aum;
-```
-
-## 5. Product Performance Analysis and Employee Engagement
-
-This is an evaluation tool for product performance  that assesses the relationship between employee analysis activity and the corresponding asset growth (AUM). It helps organizations understand whether the level of analysis dedicated to a product aligns with its actual performance.
-
-**Purpose:** The tool evaluates each product's performance by comparing the level of analysis activity (employee effort) against
-the actual asset growth (AUM)  achieved by the product.
-     
-
- **Insights** : 
-
-- Overanalyzed Products : Products receiving excessive attention but showing limited or below-average AUM growth.
-- Underanalyzed Products : Products receiving minimal attention despite strong or above-average AUM growth.
-- Sufficiently Analyzed Products : Products where the level of analysis matches their AUM performance.
-- Categorization of Asset Growth : Identifies products with strong, moderate, or low asset growth.
-     
-
-**Value:**
-
-- Mismatch Identification : Highlights mismatches between employee effort and product outcomes (e.g., high-effort/low-growth or low-effort/high-growth products).
-- Resource Optimization : Guides better allocation of analyst resources by identifying underperforming products that are overanalyzed or high-potential products that are neglected.
-- Strategic Prioritization : Helps prioritize products for further analysis, investment, or deprioritization based on their performance and resource alignment.
-
-### Query Overview: 
-
-- ProductsStats CTE: Aggregates product-level metrics by calculating the analysis activity and asset growth for each product.
-
-- ProductsAvgs CTE: Calculates organization-wide benchmarks for analysis activity and asset growth using the aggregated data from the ProductsStats CTE.
-
-- Final SELECT Statement: Retrieves individual product metrics and compares them against the organization-wide benchmarks.
-
-    - Analysis Valuation :
-        - Overanalyzed: Products analyzed by 10 or more employees.
-        - Sufficient_Analyzed: Products analyzed by 5–9 employees.
-        - Underanalyzed: Products analyzed by fewer than 5 employees.
-                    
-    - AUM Valuation :
-        - Strong_Asset_Growth: Products with AUM ≥ 16,000,000.
-        - Moderate_Asset_Growth: Products with AUM between 8,000,000 and 15,999,999.
-        - Low_Asset_Growth: Products with AUM < 8,000,000.
-                 
-Results are sorted by analyze_count in descending order.
-         
-    
-```sql
-WITH ProductsStats AS(
-	SELECT
-		p.product_name,
-		COUNT(DISTINCT employee_key) AS analyze_count,
-		SUM(invested_amount)-SUM(withdrawal_amount) AS product_AUM
-	FROM
-		gold.fact_employee_product e
-	LEFT JOIN gold.dim_products p 
-		ON e.product_key=p.product_key
-	LEFT JOIN gold.fact_transactions t 
-		ON p.product_key=t.product_key
-	GROUP BY
-		p.product_name
-),
-ProductsAvgs AS (
-	SELECT
-		CAST(ROUND(AVG(analyze_count * 1.0), 2) AS DECIMAL (18, 2)) AS avg_analyze_count,
-		CAST(ROUND(AVG(product_AUM * 1.0), 2) AS DECIMAL (18, 2)) AS avg_product_AUM
-	FROM ProductsStats
-)
-SELECT
-	ps.product_name,
-	ps.analyze_count,
-	pa.avg_analyze_count,
-	ps.product_AUM,
-	pa.avg_product_AUM,
-	CASE
-		WHEN ps.analyze_count>=10 THEN 'Overanalyzed'
-		WHEN ps.analyze_count>=5 THEN 'Sufficient_Analyzed'
-		ELSE 'Underanalyzed'
-		END AS analyze_valuation,
-	CASE
-		WHEN ps.product_AUM>=16000000 THEN 'Strong_Asset_Growth'
-		WHEN ps.product_AUM>=8000000 THEN 'Moderate_Asset_Growth'
-		ELSE 'Low_Asset_Growth'
-		END AS AUM_valuation
-FROM
-	ProductsStats ps
-	CROSS JOIN ProductsAvgs pa
-WHERE
-	PS.product_name IS NOT NULL
-ORDER BY
-	analyze_count DESC
-```
-     
-
-
-

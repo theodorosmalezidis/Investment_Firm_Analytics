@@ -1,7 +1,7 @@
 # Introduction
 
 After the Data Warehouse was successfully deployed (you can find the full data engineering project [here](https://github.com/theodorosmalezidis/DWH_project/tree/main))
-,my job wasn' t done. In this business scenario, the firm’s stakeholders required for "Data Interpretation". They needed solutions in problems like distinguishing organic growth from seasonal spikes, they couldn't quantify their employee’s productivity or assess products contribution to revenue, and they needed clear answers about the client retention rate to understand churn risk.
+,my job wasn' t done. In this business scenario, the firm’s stakeholders required for "Data Interpretation". They needed solutions in problems like distinguishing organic growth from seasonal spikes, they couldn't quantify their employee’s productivity, efficiency and perfomance or assess products contribution to revenue, and they needed clear answers about the client retention rate to understand churn risk.
 
 
 # Goals
