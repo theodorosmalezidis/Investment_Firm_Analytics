@@ -1,7 +1,7 @@
 
 # B) Strategic BI Report
 
-![visual](/visual_documentation/png/advanced_report.png)
+![visual](/visual_documentation/png/strategic_bi_report.png)
 
 
 This report is structured into five key sections , each of which I analyzed to provide comprehensive insights.
