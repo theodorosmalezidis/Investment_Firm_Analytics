@@ -55,12 +55,12 @@ So i split my report into two parts, EDA & Basic Metrics focused on providing an
 
 *Image created with draw.io*
 
-You can see the report [here](https://github.com/theodorosmalezidis/Investment_Firm_Analytics/tree/main/Reports/Basic%20Report%20(EDA)).
+You can see the report [here](https://github.com/theodorosmalezidis/Investment_Firm_Analytics/tree/main/Reports/EDA%20%26%20Basic%20Metrics).
 
 ## B) Strategic BI Report 
 
-![visual](visual_documentation/png/advanced_report.png)
+![visual](visual_documentation/png/strategic_bi_report.png)
 
 *Image created with draw.io*
 
-You can see the report [here](https://github.com/theodorosmalezidis/Investment_Firm_Analytics/tree/main/Reports/Advanced%20Report).
+You can see the report [here](https://github.com/theodorosmalezidis/Investment_Firm_Analytics/tree/main/Reports/Strategic%20BI%20Report).
