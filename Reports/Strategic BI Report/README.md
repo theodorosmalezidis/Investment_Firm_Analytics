@@ -278,199 +278,115 @@ order by
 ```
 
 
-## 3. Client Portfolio Diversification & Risk Assessment
+## 5. Client Portfolio Diversification & Risk Assessment
 
-This query was designed as a Client Portfolio Diversification & Risk Assessment Tool.
+The last concern the firm had was the stability of their clients portfolios. And with the data available i thought that i could construct another tool suitable for this task. So based on the number of different products and the concetration of capital flow into them, as metrics,i created the following diversification and risk assesment tool. I also stored the reaults as temp table for future bi analysis available (an example for usefull analysis will follow). Based on results the managers should reasses the dangers in clients portofolios and aim for diversification or deconcetration leading to firm's stability.
 
-- **Purpose:** This tool evaluates client portfolio diversification and risk concentration by analyzing product variety, portfolio value distribution, and risk exposure. It helps identify high-risk portfolios and areas for improvement in diversification strategies.
-- **Insight:** It reveals how concentrated clients' portfolios are in specific products, highlighting potential risks. This enables targeted adjustments to improve portfolio diversification and reduce exposure.
-- **Value:** Supports effective risk management by providing insights into portfolio concentration, helping optimize client portfolios and ensuring long-term stability.
+
 
 ### Query Overview: 
 
-- ClientPortfolio CTE: I calculate each active client's net investment (invested minus withdrawn) grouped by product and client.
+- Step 1: Calculate Net Flow at the Client-Product level
 
-- TotalPortfolio CTE: I compute each client's total portfolio value by summing their net investments.
+- Step 2: Aggregate Net Flow to Client Total 
 
-- DiversificationMetrics CTE: I measure the number of distinct product types and names, identify the top product's concentration as a percentage of the total portfolio, and classify the client into a risk category based on their diversification and concentration level.
+- Step 3: Calculate Concentration Metrics (Diversification & Weight)
 
-- Final SELECT: I present each client's key diversification metrics, total portfolio value, top product concentration %, and assigned risk category, sorted by concentration and portfolio size.
+-Step 4 : FinaL Query and Risk Categorization
 
 ```sql
-WITH ClientPortfolio AS (
-    SELECT 
-        c.client_key,
-        c.client_full_name,
-        c.branch,
-        c.country,
-        p.product_type,
-        p.product_name,
-        SUM(t.invested_amount) - SUM(t.withdrawal_amount) AS net_portfolio_value
-    FROM gold.fact_transactions t
-    JOIN gold.dim_products p ON t.product_key = p.product_key
-    JOIN gold.dim_clients c ON t.client_key = c.client_key
-    WHERE t.transaction_date IS NOT NULL
-        AND (t.invested_amount > 0 OR t.withdrawal_amount > 0)
-        AND c.closure_date IS NULL -- Focus on active clients
-    GROUP BY 
-        c.client_key,
-        c.client_full_name,
-        c.branch,
-        c.country,
-        p.product_type,
-        p.product_name
-    HAVING SUM(t.invested_amount) - SUM(t.withdrawal_amount) > 0 
-),
-TotalPortfolio AS (
-    SELECT 
-        client_key,
-        SUM(net_portfolio_value) AS total_client_portfolio
-    FROM ClientPortfolio
-    GROUP BY client_key
-),
-DiversificationMetrics AS (
-    SELECT 
-        cp.client_key,
-        cp.client_full_name,
-        cp.branch,
-        cp.country,
-        COUNT(DISTINCT cp.product_type) AS distinct_product_types,
-        COUNT(DISTINCT cp.product_name) AS distinct_product_names,
-        tp.total_client_portfolio,
-        MAX(cp.net_portfolio_value) AS top_product_value,
-        CAST(MAX(net_portfolio_value) AS DECIMAL(18,2)) / 
-		NULLIF(CAST(total_client_portfolio AS DECIMAL(18,2)), 0) * 100 AS top_product_concentration_percent,
-        CASE 
-            WHEN COUNT(DISTINCT cp.product_type) = 1 
-            THEN 'Very High Risk'
-            WHEN COUNT(DISTINCT cp.product_type) = 2 
-               AND CAST(MAX(net_portfolio_value) AS DECIMAL(18,2)) / 
-			NULLIF(CAST(total_client_portfolio AS DECIMAL(18,2)), 0) * 100 >= 50
-            THEN 'High Risk'
-			WHEN COUNT(DISTINCT cp.product_type) = 2 
-               AND CAST(MAX(net_portfolio_value) AS DECIMAL(18,2)) / 
-			NULLIF(CAST(total_client_portfolio AS DECIMAL(18,2)), 0) * 100 < 50
-            THEN 'Moderate Risk'
-			WHEN COUNT(DISTINCT cp.product_type) = 3 
-                AND CAST(MAX(net_portfolio_value) AS DECIMAL(18,2)) / 
-			NULLIF(CAST(total_client_portfolio AS DECIMAL(18,2)), 0) * 100 >= 50 
-            THEN 'Low Risk'
-            ELSE 'Very Low Risk'
-        END AS concentration_risk
-    FROM ClientPortfolio cp
-    JOIN TotalPortfolio tp ON cp.client_key = tp.client_key
-    GROUP BY 
-        cp.client_key,
-        cp.client_full_name,
-        cp.branch,
-        cp.country,
-        tp.total_client_portfolio
-)
+-- Step 1: Calculate Net Flow at the Client-Product level
+
+with ClientPortfolio as 
+						(select 
+							c.client_key,
+							c.client_full_name,
+							c.branch,
+							c.country,
+							p.product_type,
+							p.product_name,
+							sum(t.invested_amount) - sum(t.withdrawal_amount) as net_flow_value
+						from
+							gold.fact_transactions t
+								join gold.dim_products p on t.product_key = p.product_key
+									join gold.dim_clients c on t.client_key = c.client_key
+						where
+							t.transaction_date is not null
+							and (t.invested_amount > 0 or t.withdrawal_amount > 0)
+							and c.closure_date is null -- Focus on active clients
+						group by 
+							c.client_key,
+							c.client_full_name,
+							c.branch,
+							c.country,
+							p.product_type,
+							p.product_name
+						having
+							sum(t.invested_amount) - sum(t.withdrawal_amount) > 0 
+						),
+-- Step 2: Aggregate Net Flow to Client Total 
+TotalPortfolio as 
+				(select 
+					client_key,
+					sum(net_flow_value) as total_client_net_flow
+				from
+					ClientPortfolio
+				group by
+					client_key
+				 ),
+-- Step 3: Calculate Concentration Metrics (Diversification & Weight)
+CalcMetrics as 
+						(select 
+							cp.client_key,
+							cp.client_full_name,
+							cp.branch,
+							cp.country,
+							count(distinct cp.product_name) as distinct_product_names,
+							tp.total_client_net_flow,
+							max(cp.net_flow_value) as top_product_value,-- metric 1
+							cast(max(cp.net_flow_value) * 100.0 / nullif(tp.total_client_net_flow , 0) as decimal (10,2)) as top_pct -- metric 2 concetration on top product
+						from
+							ClientPortfolio cp
+								join TotalPortfolio tp ON cp.client_key = tp.client_key
+						group by 
+							cp.client_key,
+							cp.client_full_name,
+							cp.branch,
+							cp.country,
+							tp.total_client_net_flow
+						)
+--Step 4 : FinaL Query and Risk Categorization
 SELECT 
     client_key,
     client_full_name,
     branch,
     country,
-    distinct_product_types,
     distinct_product_names,
-    ROUND(total_client_portfolio, 2) AS total_portfolio_value,
-    cast(ROUND(top_product_concentration_percent, 2) as decimal (18, 2)) AS top_product_concentration_percent,
-    concentration_risk
-FROM
-	DiversificationMetrics
-ORDER BY 
-    top_product_concentration_percent DESC,
-    total_portfolio_value DESC;
+    round(total_client_net_flow, 2) AS total_flow_value,
+    top_pct as max_asset_concentration_pct, 
+	case
+		when distinct_product_names <= 5 or top_pct >= 50 
+            then 'Very High Risk'
+		when distinct_product_names between 5 and 10 and top_pct >= 50 
+            then 'High Risk'
+		 when distinct_product_names >10 and top_pct > 30 
+            then 'Moderate Risk'
+		when distinct_product_names > 10 and top_pct < 30 
+            then 'Low Risk'
+		else 'Very Low Risk'
+		end as concentration_risk
+into
+	#ConcetrationRiskTool -- 'select into' store it as temp table for instant bi analysis
+from
+	CalcMetrics
+order by 
+    max_asset_concentration_pct desc,
+    total_flow_value desc;
 ```
 
-With this tool, you can evaluate each client's portfolio individually, or you can aggregate results by branch or clients' country of residence for broader insights. For example:
+With this tool, stored as temp table, you can evaluate each client's portfolio individually, or you can aggregate results by branch or clients' country of residence for broader insights. For example:
 
 ```sql
-WITH ClientPortfolio AS (
-    SELECT 
-        c.client_key,
-        c.client_full_name,
-        c.branch,
-        c.country,
-        p.product_type,
-        p.product_name,
-        SUM(t.invested_amount) - SUM(t.withdrawal_amount) AS net_portfolio_value
-    FROM gold.fact_transactions t
-    LEFT JOIN gold.dim_products p ON t.product_key = p.product_key
-    LEFT JOIN gold.dim_clients c ON t.client_key = c.client_key
-    WHERE t.transaction_date IS NOT NULL
-        AND (t.invested_amount > 0 OR t.withdrawal_amount > 0)
-        AND c.closure_date IS NULL -- Focus on active clients
-    GROUP BY 
-        c.client_key,
-        c.client_full_name,
-        c.branch,
-        c.country,
-        p.product_type,
-        p.product_name
-    HAVING SUM(t.invested_amount) - SUM(t.withdrawal_amount) > 0 
-),
-TotalPortfolio AS (
-    SELECT 
-        client_key,
-        SUM(net_portfolio_value) AS total_client_portfolio
-    FROM
-		ClientPortfolio
-    GROUP BY
-		client_key
-),
-DiversificationMetrics AS (
-    SELECT 
-        cp.client_key,
-        cp.client_full_name,
-        cp.branch,
-        cp.country,
-        COUNT(DISTINCT cp.product_type) AS distinct_product_types,
-        COUNT(DISTINCT cp.product_name) AS distinct_product_names,
-        tp.total_client_portfolio,
-        MAX(cp.net_portfolio_value) AS top_product_value,
-        CAST(MAX(net_portfolio_value) AS DECIMAL(18,2)) / 
-		NULLIF(CAST(total_client_portfolio AS DECIMAL(18,2)), 0) * 100 AS top_product_concentration_percent,
-        CASE 
-            WHEN COUNT(DISTINCT cp.product_type) = 1 
-            THEN 'Very High Risk'
-            WHEN COUNT(DISTINCT cp.product_type) = 2 
-               AND CAST(MAX(net_portfolio_value) AS DECIMAL(18,2)) / 
-			NULLIF(CAST(total_client_portfolio AS DECIMAL(18,2)), 0) * 100 >= 50
-            THEN 'High Risk'
-			WHEN COUNT(DISTINCT cp.product_type) = 2 
-               AND CAST(MAX(net_portfolio_value) AS DECIMAL(18,2)) / 
-			NULLIF(CAST(total_client_portfolio AS DECIMAL(18,2)), 0) * 100 < 50
-            THEN 'Moderate Risk'
-			WHEN COUNT(DISTINCT cp.product_type) = 3 
-                AND CAST(MAX(net_portfolio_value) AS DECIMAL(18,2)) / 
-			NULLIF(CAST(total_client_portfolio AS DECIMAL(18,2)), 0) * 100 >= 50 
-            THEN 'Low Risk'
-            ELSE 'Very Low Risk'
-        END AS concentration_risk
-    FROM
-		ClientPortfolio cp
-		LEFT JOIN TotalPortfolio tp ON cp.client_key = tp.client_key
-    GROUP BY 
-        cp.client_key,
-        cp.client_full_name,
-        cp.branch,
-        cp.country,
-        tp.total_client_portfolio
-),final as(
-SELECT 
-    client_key,
-    client_full_name,
-    branch,
-    country,
-    distinct_product_types,  
-    distinct_product_names,
-    ROUND(total_client_portfolio, 2) AS total_portfolio_value,
-    CAST(ROUND(top_product_concentration_percent, 2) as decimal (18, 2)) AS top_product_concentration_percent,
-    concentration_risk
-FROM
-	DiversificationMetrics
-)
 SELECT
     branch,
     COUNT(CASE WHEN concentration_risk = 'Very High Risk' THEN 1 END) AS very_high_risk_clients,
@@ -479,7 +395,7 @@ SELECT
 	COUNT(CASE WHEN concentration_risk = 'Low Risk' THEN 1 END) AS low_risk_clients,
     COUNT(CASE WHEN concentration_risk = 'Very Low Risk' THEN 1 END) AS very_low_risk_clients
 FROM
-	final
+	#ConcetrationRiskTool
 WHERE
 	branch IS NOT NULL
 GROUP BY
@@ -491,22 +407,31 @@ ORDER BY
 Resullts:
 | Branch      | Very High Risk Clients | High Risk Clients | Moderate Risk Clients | Low Risk Clients | Very Low Risk Clients |
 |-------------|------------------------|-------------------|-----------------------|------------------|-----------------------|
-| Amsterdam   | 34                     | 22                | 233                   | 30               | 408                   |
-| Berlin      | 34                     | 25                | 219                   | 20               | 357                   |
-| Bern        | 38                     | 30                | 262                   | 29               | 366                   |
-| Canberra    | 35                     | 26                | 255                   | 29               | 375                   |
-| London      | 37                     | 35                | 221                   | 29               | 363                   |
-| n/a         | 5                      | 5                 | 29                    | 5                | 42                    |
-| Ottawa      | 39                     | 15                | 235                   | 21               | 397                   |
-| Paris       | 47                     | 17                | 254                   | 23               | 372                   |
-| Seoul       | 37                     | 35                | 224                   | 28               | 343                   |
-| Singapore   | 34                     | 27                | 243                   | 19               | 364                   |
-| Stockholm   | 32                     | 22                | 236                   | 33               | 381                   |
-| Tokyo       | 37                     | 22                | 226                   | 24               | 359                   |
-| Washington  | 47                     | 24                | 248                   | 26               | 374                   |
+| Amsterdam   | 57                     | 0                 | 248                   | 422              | 0                     |
+| Berlin      | 49                     | 0                 | 238                   | 366              | 2                     |
+| Bern        | 61                     | 0                 | 248                   | 414              | 2                     |
+| Canberra    | 57                     | 0                 | 241                   | 419              | 3                     |
+| London      | 72                     | 0                 | 229                   | 379              | 5                     |
+| n/a         | 11                     | 0                 | 32                    | 43               | 0                     |
+| Ottawa      | 37                     | 0                 | 289                   | 377              | 4                     |
+| Paris       | 47                     | 0                 | 270                   | 393              | 3                     |
+| Seoul       | 68                     | 0                 | 245                   | 351              | 3                     |
+| Singapore   | 52                     | 0                 | 247                   | 386              | 2                     |
+| Stockholm   | 57                     | 0                 | 229                   | 416              | 2                     |
+| Tokyo       | 49                     | 0                 | 217                   | 402              | 0                     |
+| Washington  | 56                     | 0                 | 255                   | 406              | 2                     |
 
 
 
-![visual](/visual_documentation/charts/client_risk_distribution_with_numbers.png)
+![visual](/visual_documentation/charts/portfolio_risk_dist.png)
 
 *Bar chart visualizing client risk distribution across branches. This visualization was created with Python after importing my SQL query results*
+  
+
+From the results of the risk distribution across branches some key points that stand out:
+
+1. The "High Risk" Gap: The data shows zero clients in the "High Risk" category across all branches. This indicates that clients either fail the diversification threshold and land in Very High Risk, or they possess enough products to jump directly into Moderate or Low Risk tiers.
+
+2. London's Exposure: London is the most vulnerable branch in the network, carrying the highest volume of 72 "Very High Risk" clients. This is followed closely by Seoul with 68 clients. These locations should be prioritized for immediate portfolio rebalancing.
+
+3. Minimal "Very Low Risk" Representation: The "Very Low Risk" segment represents the smallest portion of the total population, with many branches like Amsterdam and Tokyo showing 0 clients, and others showing only between 2 and 5.
