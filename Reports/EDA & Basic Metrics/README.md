@@ -10,8 +10,8 @@ There are three sections in this report:
 ```sql
 SELECT metric_name, metric_value
 FROM (
-	SELECT 'Total AUM' AS metric_name, SUM(invested_amount) - SUM(withdrawal_amount) AS metric_value, 1 AS order_column
-    	FROM gold.fact_transactions --Assets Under Management in USD
+	SELECT 'Total Net Flows' AS metric_name, SUM(invested_amount) - SUM(withdrawal_amount) AS metric_value, 1 AS order_column
+    	FROM gold.fact_transactions -- in USD
 	UNION ALL
    	SELECT 'Total Fees' AS metric_name, SUM(fee_amount ) AS metric_value, 2 AS order_column
     	FROM gold.fact_transactions --Total Fees Collected in USD
@@ -185,7 +185,7 @@ order by
 ```
 **Results**
 
-| Product Type | Transactions | Total Net Flows | Total Fees | % Trans | % AUM | % Fees |
+| Product Type | Transactions | Total Net Flows | Total Fees | % Trans | % NetFlows | % Fees |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **STOCK** | 259,200 | 838,678,216 | 16,677,155.00 | 86.69% | 86.56% | 93.91% |
 | **ETF** | 23,172 | 77,370,512 | 754,510.65 | 7.75% | 7.99% | 4.25% |
